@@ -53,3 +53,9 @@ google-services.json
 freeline.py
 freeline/
 freeline_project_description.json
+
+# Android Studio additionals
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+
