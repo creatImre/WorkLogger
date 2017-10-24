@@ -4,10 +4,11 @@ jdk: oraclejdk8
 
 android:
   components:
-    # Uncomment the lines below if you want to
-    # use the latest revision of Android SDK Tools
+    # Note that the tools section appears twice on purpose
+    # as it’s required to get the newest Android SDK tools.
     - tools
     - platform-tools
+    - tools
 
     # The BuildTools version used by your project
     - build-tools-26.0.1
@@ -19,17 +20,11 @@ android:
     - extra-android-support
     - extra-android-m2repository
     - extra-google-m2repository
-    
-    # Specify at least one system image,
-    # if you need to run emulator(s) during your tests
-    - sys-img-armeabi-v7a-android-26
 
-script:
-  - android list targets
-  - echo no | android create avd --force -n test -t android-26 --abi armeabi-v7a
-  - emulator -avd test -no-audio -no-window &
-  - android-wait-for-emulator
-  - adb shell input keyevent 82 &
+  licenses:
+    - 'android-sdk-preview-license-52d11cd2'
+    - 'android-sdk-license-.+'
+    - 'google-gdk-license-.+'
 
 after_success:
   - bash echo "Perfection!"
