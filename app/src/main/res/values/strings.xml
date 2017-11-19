@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Sign-In Quickstart</string>
+    <string name="app_name">Work Logger</string>
     <string name="title_text">Google Sign-In\nQuickstart</string>
 
     <!-- Sign-in status messages -->
@@ -48,7 +48,7 @@
     <!-- Messages for the Rest API activity -->
     <string name="connections_fmt">Connections: %1$s</string>
     <string name="msg_contacts_failed">Get contacts failed.</string>
-    <string name="server_client_id">390153392979–9gaqsfen0f7kdqc3kh07b4uvm2fn8loe.apps.googleusercontent.com</string>
+    <string name="server_client_id">390153392979-p7cnakp10smetpajto3bhj95se6adip6.apps.googleusercontent.com</string>
     <string name="title_activity_work_list">WorkListActivity</string>
     <string name="large_text">
         "Material is the metaphor.\n\n"
