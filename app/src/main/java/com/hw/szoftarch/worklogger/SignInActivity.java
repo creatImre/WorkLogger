@@ -12,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
@@ -74,6 +75,7 @@ public class SignInActivity extends AppCompatActivity implements
         OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(mGoogleApiClient);
         if (opr.isDone()) {
             Log.d(TAG, "Got cached sign-in");
+            GoogleSignIn.getLastSignedInAccount(this);
             GoogleSignInResult result = opr.get();
             handleSignInResult(result);
         } else {
@@ -107,9 +109,10 @@ public class SignInActivity extends AppCompatActivity implements
     private void handleSignInResult(GoogleSignInResult result) {
         Log.d(TAG, "handleSignInResult:" + result.isSuccess());
         if (result.isSuccess()) {
-            GoogleSignInAccount acct = result.getSignInAccount();
-            assert acct != null;
-            mStatusTextView.setText(getString(R.string.signed_in_fmt, acct.getDisplayName()));
+            GoogleSignInAccount account = result.getSignInAccount();
+            WorkLoggerApplication.verifyTokenOnServer();
+            assert account != null;
+            mStatusTextView.setText(getString(R.string.signed_in_fmt, account.getDisplayName()));
             updateUI(true);
         } else {
             updateUI(false);
@@ -176,7 +179,7 @@ public class SignInActivity extends AppCompatActivity implements
             findViewById(R.id.sign_out_and_disconnect).setVisibility(View.VISIBLE);
             if (startNextActivity) {
                 startNextActivity = false;
-                Intent intent = new Intent(this, WorkListActivity.class);
+                Intent intent = new Intent(this, LogWorkActivity.class);
                 startActivity(intent);
             }
         } else {
