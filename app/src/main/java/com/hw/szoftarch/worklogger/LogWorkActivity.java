@@ -93,10 +93,20 @@ public class LogWorkActivity extends AppCompatActivity
                 animateFAB();
                 break;
             case R.id.fab_manual:
+                addManually();
                 break;
             case R.id.fab_stopwatch:
+                startStopWatch();
                 break;
         }
+    }
+
+    private void addManually() {
+
+    }
+
+    private void startStopWatch() {
+
     }
 
     public void animateFAB() {
