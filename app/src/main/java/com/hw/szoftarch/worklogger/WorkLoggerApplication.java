@@ -10,6 +10,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 public class WorkLoggerApplication extends Application {
     private static WorkLoggerApplication mInstance;
 
+    public static GoogleSignInAccount getUser() {
+        return GoogleSignIn.getLastSignedInAccount(getContext());
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -18,6 +22,11 @@ public class WorkLoggerApplication extends Application {
 
     public static Context getContext() {
         return mInstance.getApplicationContext();
+    }
+
+    public static boolean userLoggedIn() {
+        final GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getContext());
+        return account != null;
     }
 
     public static String getUserIdToken() {

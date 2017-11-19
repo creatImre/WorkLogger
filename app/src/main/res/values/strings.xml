@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Work Logger</string>
-    <string name="title_text">Google Sign-In\nQuickstart</string>
+    <string name="title_text">Google Sign-In</string>
 
     <!-- Sign-in status messages -->
     <string name="signed_in_fmt">Signed in as: %s</string>
@@ -140,5 +140,9 @@
         "when a user tries to pick up one of cards.\n\n"
     </string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_log_work2">LogWorkActivity</string>
     <string name="title_activity_log_work">LogWorkActivity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
 </resources>
