@@ -1,5 +1,7 @@
 package com.hw.szoftarch.worklogger;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,14 +19,18 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.squareup.picasso.Picasso;
 
 public class LogWorkActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
@@ -61,11 +67,31 @@ public class LogWorkActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        final NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        final NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        View headerView =  navigationView.getHeaderView(0);
+        ImageView navPicture = headerView.findViewById(R.id.nav_profile_picture);
+        TextView navName = headerView.findViewById(R.id.nav_profile_name);
+        TextView navEmail = headerView.findViewById(R.id.nav_profile_email);
+
+        final GoogleSignInAccount account = WorkLoggerApplication.getUser();
+        navName.setText(account.getDisplayName());
+        navEmail.setText(account.getEmail());
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        int iconSize = 64;
+        if (am != null) {
+            iconSize = am.getLauncherLargeIconSize();
+        }
+        Picasso.with(this)
+                .load(account.getPhotoUrl()).transform(new CircleTransform())
+                .resize(iconSize, iconSize)
+                .placeholder(android.R.drawable.sym_def_app_icon)
+                .error(android.R.drawable.sym_def_app_icon)
+                .into(navPicture);
 
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
+                .requestProfile()
                 .build();
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -192,20 +218,14 @@ public class LogWorkActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         final int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        } else if (id == R.id.nav_sign_out) {
+        if (id == R.id.nav_sign_out) {
             signOut();
+        } else if (id == R.id.nav_list) {
+
+        } else if (id == R.id.nav_stopwatch) {
+
+        } else if (id == R.id.nav_reports) {
+
         }
 
         final DrawerLayout drawer = findViewById(R.id.drawer_layout);

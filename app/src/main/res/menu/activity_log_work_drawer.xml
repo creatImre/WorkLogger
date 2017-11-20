@@ -3,42 +3,25 @@
       xmlns:tools="http://schemas.android.com/tools"
       tools:showIn="navigation_view">
 
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_camera"
-            android:icon="@drawable/ic_menu_camera"
-            android:title="Import"/>
-        <item
-            android:id="@+id/nav_gallery"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="Gallery"/>
-        <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow"/>
-        <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Tools"/>
-    </group>
-
-    <item android:title="Communicate">
-        <menu>
-            <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Share"/>
-            <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
-                android:title="Send"/>
-        </menu>
-    </item>
-    <item android:title="Profile">
+    <item android:title="">
         <menu>
             <item
                 android:id="@+id/nav_sign_out"
-                android:title="Sign Out"/>
+                android:title="@string/sign_out"/>
         </menu>
     </item>
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_list"
+            android:icon="@drawable/ic_view_list_black_24dp"
+            android:title="@string/log_list"/>
+        <item
+            android:id="@+id/nav_stopwatch"
+            android:icon="@drawable/ic_watch_later_black_24dp"
+            android:title="@string/stopwatch"/>
+        <item
+            android:id="@+id/nav_reports"
+            android:icon="@drawable/ic_receipt_black_24dp"
+            android:title="@string/reports"/>
+    </group>
 </menu>

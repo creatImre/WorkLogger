@@ -42,6 +42,7 @@ public class SignInActivity extends AppCompatActivity implements
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
+                .requestProfile()
                 //.requestIdToken(getString(R.string.server_client_id))
                 .build();
 
