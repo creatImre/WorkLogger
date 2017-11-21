@@ -2,6 +2,7 @@ package com.hw.szoftarch.worklogger;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +20,15 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
+import com.hw.szoftarch.worklogger.entities.User;
+import com.hw.szoftarch.worklogger.networking.RetrofitClient;
+import com.hw.szoftarch.worklogger.networking.WorkLoggerService;
+
+import java.io.IOException;
+
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
+import retrofit2.Call;
 
 public class SignInActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
@@ -40,10 +50,14 @@ public class SignInActivity extends AppCompatActivity implements
 
         findViewById(R.id.sign_in_button).setOnClickListener(this);
 
+        Realm.init(this);
+        RealmConfiguration config = new RealmConfiguration.Builder().build();
+        Realm.setDefaultConfiguration(config);
+
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .requestProfile()
-                //.requestIdToken(getString(R.string.server_client_id))
+                .requestIdToken(getString(R.string.server_client_id))
                 .build();
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -82,13 +96,18 @@ public class SignInActivity extends AppCompatActivity implements
         hideProgressDialog();
     }
 
+    private void signIn() {
+        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == RC_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            handleSignInResult(result);
+            new GoogleSignInTask(result).execute((Void) null);
         }
     }
 
@@ -103,11 +122,6 @@ public class SignInActivity extends AppCompatActivity implements
         } else {
             updateUI(false);
         }
-    }
-
-    private void signIn() {
-        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-        startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
     @Override
@@ -155,6 +169,73 @@ public class SignInActivity extends AppCompatActivity implements
             case R.id.sign_in_button:
                 signIn();
                 break;
+        }
+    }
+
+    public class GoogleSignInTask extends AsyncTask<Void, Void, GoogleSignInResult> {
+
+        private GoogleSignInResult result;
+
+        Realm realm;
+
+        GoogleSignInTask(GoogleSignInResult result) {
+            this.result = result;
+        }
+
+        @Override
+        protected GoogleSignInResult doInBackground(Void... params) {
+            GoogleSignInAccount account = result.getSignInAccount();
+            if (account == null) {
+                return result;
+            }
+            realm = Realm.getDefaultInstance();
+            User localUser = realm.where(User.class)
+                    .equalTo("googleId", account.getId())
+                    .findFirst();
+
+            final RetrofitClient client = new RetrofitClient();
+            final WorkLoggerService service = client.createService();
+            final Call<User> loginCall = service.login();
+            User loginUser = null;
+            try {
+                loginUser = loginCall.execute().body();
+            } catch (IOException e) {
+                Log.e(SignInActivity.class.getName(), e.getMessage());
+            }
+
+            if (loginUser != null) {
+                if (localUser == null) {
+                    storeUser(loginUser, realm);
+                } else {
+                    localUser.update(loginUser, realm);
+                }
+                realm.close();
+            }
+            return result;
+
+        }
+
+        private void storeUser(User user, Realm realm) {
+            realm.beginTransaction();
+            realm.copyToRealm(user);
+            realm.commitTransaction();
+            realm.close();
+        }
+
+        @Override
+        protected void onPreExecute() {
+            showProgressDialog();
+        }
+
+        @Override
+        protected void onPostExecute(final GoogleSignInResult result) {
+            hideProgressDialog();
+            handleSignInResult(result);
+        }
+
+        @Override
+        protected void onCancelled() {
+            hideProgressDialog();
         }
     }
 }

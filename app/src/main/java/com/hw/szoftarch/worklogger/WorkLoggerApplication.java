@@ -2,12 +2,20 @@ package com.hw.szoftarch.worklogger;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 
 public class WorkLoggerApplication extends Application {
+
+    public static String SOCKET_KEY = "socket";
+    public static String IP_ADDRESS_KEY = "ipAddress";
+    public static String SERVICE_NAME_KEY = "serviceName";
+
     private static WorkLoggerApplication mInstance;
 
     public static GoogleSignInAccount getUser() {
@@ -29,9 +37,12 @@ public class WorkLoggerApplication extends Application {
         return account != null;
     }
 
+    @Nullable
     public static String getUserIdToken() {
         final GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getContext());
-        assert account != null;
+        if (account == null) {
+            return null;
+        }
         return account.getIdToken();
     }
 
@@ -45,4 +56,13 @@ public class WorkLoggerApplication extends Application {
             ServerHelper.addUser(idToken);
         }
     }
+
+    public static String getServiceUrl() {
+        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        final String ip = preferences.getString(IP_ADDRESS_KEY, "192.168.1.15");
+        final String socket = preferences.getString(SOCKET_KEY, "9090");
+        final String serviceName = preferences.getString(SERVICE_NAME_KEY, "service/rest");
+        return "http://" + ip + ":" + socket + "/" + serviceName + "/";
+    }
+
 }
