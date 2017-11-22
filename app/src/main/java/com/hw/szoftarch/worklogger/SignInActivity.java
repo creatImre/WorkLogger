@@ -28,6 +28,7 @@ import java.io.IOException;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import io.realm.exceptions.RealmMigrationNeededException;
 import retrofit2.Call;
 
 public class SignInActivity extends AppCompatActivity implements
@@ -188,7 +189,15 @@ public class SignInActivity extends AppCompatActivity implements
             if (account == null) {
                 return result;
             }
-            realm = Realm.getDefaultInstance();
+            Log.d(SignInActivity.class.getName(), "id: " + result.getSignInAccount().getId() + ", token: " + result.getSignInAccount().getIdToken());
+            try {
+                realm = Realm.getDefaultInstance();
+            } catch (RealmMigrationNeededException e) {
+                Log.e(SignInActivity.class.getName(), "Migration needed by realm. Resetting realm...");
+                Realm.deleteRealm(new RealmConfiguration.Builder().build());
+                Realm.setDefaultConfiguration(new RealmConfiguration.Builder().build());
+                realm = Realm.getDefaultInstance();
+            }
             User localUser = realm.where(User.class)
                     .equalTo("googleId", account.getId())
                     .findFirst();
@@ -204,15 +213,19 @@ public class SignInActivity extends AppCompatActivity implements
             }
 
             if (loginUser != null) {
+                Log.d(SignInActivity.class.getName(), "loginUser is not null");
                 if (localUser == null) {
                     storeUser(loginUser, realm);
+                    Log.d(SignInActivity.class.getName(), "local user not found, storing loginUser...");
                 } else {
                     localUser.update(loginUser, realm);
+                    Log.d(SignInActivity.class.getName(), "local user found, updating...");
                 }
                 realm.close();
+            } else {
+                Log.d(SignInActivity.class.getName(), "loginUser is null");
             }
             return result;
-
         }
 
         private void storeUser(User user, Realm realm) {
@@ -220,6 +233,7 @@ public class SignInActivity extends AppCompatActivity implements
             realm.copyToRealm(user);
             realm.commitTransaction();
             realm.close();
+            Log.d(SignInActivity.class.getName(), "Storing is finished");
         }
 
         @Override
