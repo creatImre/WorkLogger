@@ -1,5 +1,7 @@
 package com.hw.szoftarch.worklogger.entities;
 
+import android.support.annotation.NonNull;
+
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -47,4 +49,28 @@ public class Issue extends RealmObject {
         return id;
     }
 
+    @Override
+    public String toString() {
+        return "Issue{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", project=" + project +
+                ", workingHoursIds=" + getWorkingHourIds() +
+                '}';
+    }
+
+    @NonNull
+    private String getWorkingHourIds() {
+        StringBuilder result = new StringBuilder("[");
+        for(WorkingHour workingHour : workingHours) {
+            if (result.toString().equals("[")) {
+                result.append(" ").append(workingHour.getId());
+            } else {
+                result.append(", ").append(workingHour.getId());
+            }
+        }
+        result.append("]");
+        return result.toString();
+    }
 }

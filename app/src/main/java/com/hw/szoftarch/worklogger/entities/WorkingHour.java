@@ -10,7 +10,7 @@ public class WorkingHour extends RealmObject {
     @PrimaryKey
     private long id;
 
-    private Date starting;
+    private long starting;
     private long duration;
     private User user;
     private Issue issue;
@@ -19,13 +19,17 @@ public class WorkingHour extends RealmObject {
         super();
     }
 
-    public Date getStarting() {
+    public long getStarting() {
         return starting;
     }
 
-    public void setStarting(Date starting) {
+    public void setStarting(long starting) {
         this.starting = starting;
     }
+
+    public Date getStartingDate() {
+        return new Date(starting);
+    };
 
     public long getDuration() {
         return duration;
@@ -55,4 +59,14 @@ public class WorkingHour extends RealmObject {
         return id;
     }
 
+    @Override
+    public String toString() {
+        return "WorkingHour{" +
+                "id=" + id +
+                ", starting=" + getStartingDate() +
+                ", duration=" + duration +
+                ", userId=" + (user == null ? "null" : user.getGoogleId()) +
+                ", issueId=" + (issue == null ? "null" : issue.getId()) +
+                '}';
+    }
 }

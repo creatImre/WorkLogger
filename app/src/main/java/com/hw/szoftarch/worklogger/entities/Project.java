@@ -1,5 +1,7 @@
 package com.hw.szoftarch.worklogger.entities;
 
+import android.support.annotation.NonNull;
+
 import java.util.List;
 
 import io.realm.RealmList;
@@ -48,5 +50,27 @@ public class Project  extends RealmObject {
         this.issues = issues;
     }
 
+    @Override
+    public String toString() {
+        return "Project{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", issues=" +  getIssueIds() +
+                '}';
+    }
 
+    @NonNull
+    private String getIssueIds() {
+        StringBuilder result = new StringBuilder("[");
+        for(Issue issue : issues) {
+            if (result.toString().equals("[")) {
+                result.append(" ").append(issue.getId());
+            } else {
+                result.append(", ").append(issue.getId());
+            }
+        }
+        result.append("]");
+        return result.toString();
+    }
 }
