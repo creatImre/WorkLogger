@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -18,8 +19,22 @@ public class WorkLoggerApplication extends Application {
 
     private static WorkLoggerApplication mInstance;
 
+    @Nullable
     public static GoogleSignInAccount getUser() {
         return GoogleSignIn.getLastSignedInAccount(getContext());
+    }
+
+    @NonNull
+    public static String getGoogleId() {
+        final GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getContext());
+        if (account == null) {
+            return "not logged in";
+        }
+        final String id = account.getId();
+        if (id == null) {
+            return "not logged in";
+        }
+        return id;
     }
 
     @Override
@@ -60,7 +75,7 @@ public class WorkLoggerApplication extends Application {
     public static String getServiceUrl() {
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         final String ip = preferences.getString(IP_ADDRESS_KEY, "192.168.1.15");
-        final String socket = preferences.getString(SOCKET_KEY, "9090");
+        final String socket = preferences.getString(SOCKET_KEY, "8080");
         final String serviceName = preferences.getString(SERVICE_NAME_KEY, "service/rest");
         return "http://" + ip + ":" + socket + "/" + serviceName + "/";
     }
