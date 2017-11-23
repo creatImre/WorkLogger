@@ -4,11 +4,12 @@ import com.hw.szoftarch.worklogger.entities.Project;
 import com.hw.szoftarch.worklogger.entities.User;
 import com.hw.szoftarch.worklogger.entities.WorkingHour;
 
-import io.realm.RealmList;
+import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.http.Body;
-import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.HTTP;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
@@ -30,10 +31,10 @@ public interface WorkLoggerService {
     @PUT("hour/")
     Call<String> updateWorkingHour(@Body WorkingHour workingHour);
 
-    @DELETE("hour/")
+    @HTTP(method = "DELETE", path = "hour/", hasBody = true)
     Call<String> removeWorkingHour(@Body WorkingHour workingHour);
 
     @GET("hour/")
-    Call<RealmList<WorkingHour>> getWorkingHoursByUser();
+    Call<List<WorkingHour>> getWorkingHoursByUser();
 
 }
