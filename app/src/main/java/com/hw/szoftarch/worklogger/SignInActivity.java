@@ -1,5 +1,6 @@
 package com.hw.szoftarch.worklogger;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -9,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -26,9 +28,6 @@ import com.hw.szoftarch.worklogger.networking.WorkLoggerService;
 
 import java.io.IOException;
 
-import io.realm.Realm;
-import io.realm.RealmConfiguration;
-import io.realm.exceptions.RealmMigrationNeededException;
 import retrofit2.Call;
 
 public class SignInActivity extends AppCompatActivity implements
@@ -41,6 +40,8 @@ public class SignInActivity extends AppCompatActivity implements
     private GoogleApiClient mGoogleApiClient;
     private TextView mStatusTextView;
     private ProgressDialog mProgressDialog;
+    private User mCurrentUser = null;
+    private GoogleSignInResult mGoogleSignedInResult = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,10 +51,6 @@ public class SignInActivity extends AppCompatActivity implements
         mStatusTextView = findViewById(R.id.status);
 
         findViewById(R.id.sign_in_button).setOnClickListener(this);
-
-        Realm.init(this);
-        RealmConfiguration config = new RealmConfiguration.Builder().build();
-        Realm.setDefaultConfiguration(config);
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
@@ -115,8 +112,8 @@ public class SignInActivity extends AppCompatActivity implements
     private void handleSignInResult(GoogleSignInResult result) {
         Log.d(TAG, "handleSignInResult:" + result.isSuccess());
         if (result.isSuccess()) {
+            mGoogleSignedInResult = result;
             GoogleSignInAccount account = result.getSignInAccount();
-            WorkLoggerApplication.verifyTokenOnServer();
             assert account != null;
             mStatusTextView.setText(getString(R.string.signed_in_fmt, account.getDisplayName()));
             updateUI(true);
@@ -156,9 +153,13 @@ public class SignInActivity extends AppCompatActivity implements
 
     private void updateUI(boolean signedIn) {
         if (signedIn) {
-            finish();
-            Intent intent = new Intent(this, LogWorkActivity.class);
-            startActivity(intent);
+            if (mCurrentUser != null) {
+                finish();
+                Intent intent = new Intent(this, LogWorkActivity.class);
+                startActivity(intent);
+            } else {
+                Toast.makeText(this, "Cannot connect to the server. Please try again.", Toast.LENGTH_SHORT).show();
+            }
         } else {
             mStatusTextView.setText(R.string.signed_out);
         }
@@ -168,16 +169,19 @@ public class SignInActivity extends AppCompatActivity implements
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.sign_in_button:
-                signIn();
+                if (mGoogleSignedInResult != null) {
+                    new GoogleSignInTask(mGoogleSignedInResult).execute((Void) null);
+                } else {
+                    signIn();
+                }
                 break;
         }
     }
 
+    @SuppressLint("StaticFieldLeak")
     public class GoogleSignInTask extends AsyncTask<Void, Void, GoogleSignInResult> {
 
         private GoogleSignInResult result;
-
-        Realm realm;
 
         GoogleSignInTask(GoogleSignInResult result) {
             this.result = result;
@@ -189,51 +193,24 @@ public class SignInActivity extends AppCompatActivity implements
             if (account == null) {
                 return result;
             }
-            Log.d(SignInActivity.class.getName(), "id: " + result.getSignInAccount().getId() + ", token: " + result.getSignInAccount().getIdToken());
-            try {
-                realm = Realm.getDefaultInstance();
-            } catch (RealmMigrationNeededException e) {
-                Log.e(SignInActivity.class.getName(), "Migration needed by realm. Resetting realm...");
-                Realm.deleteRealm(new RealmConfiguration.Builder().build());
-                Realm.setDefaultConfiguration(new RealmConfiguration.Builder().build());
-                realm = Realm.getDefaultInstance();
-            }
-            User localUser = realm.where(User.class)
-                    .equalTo("googleId", account.getId())
-                    .findFirst();
+            Log.d(SignInActivity.class.getName(), "googleId: " + result.getSignInAccount().getId());
+            Log.d(SignInActivity.class.getName(), "token: " + result.getSignInAccount().getIdToken());
 
-            final RetrofitClient client = new RetrofitClient();
-            final WorkLoggerService service = client.createService();
+            final WorkLoggerService service = new RetrofitClient().createService();
             final Call<User> loginCall = service.login();
-            User loginUser = null;
+            User user = null;
             try {
-                loginUser = loginCall.execute().body();
+                user = loginCall.execute().body();
             } catch (IOException e) {
-                Log.e(SignInActivity.class.getName(), e.getMessage());
+                Log.d(SignInActivity.class.getName(), "login failed: " + e.getMessage());
             }
 
-            if (loginUser != null) {
-                Log.d(SignInActivity.class.getName(), "loginUser is not null");
-                if (localUser == null) {
-                    storeUser(loginUser, realm);
-                    Log.d(SignInActivity.class.getName(), "local user not found, storing loginUser...");
-                } else {
-                    localUser.update(loginUser, realm);
-                    Log.d(SignInActivity.class.getName(), "local user found, updating...");
-                }
-                realm.close();
-            } else {
-                Log.d(SignInActivity.class.getName(), "loginUser is null");
+            if (user == null) {
+                Log.d(SignInActivity.class.getName(), "user is null");
+                return result;
             }
+            mCurrentUser = user;
             return result;
-        }
-
-        private void storeUser(User user, Realm realm) {
-            realm.beginTransaction();
-            realm.copyToRealm(user);
-            realm.commitTransaction();
-            realm.close();
-            Log.d(SignInActivity.class.getName(), "Storing is finished");
         }
 
         @Override
