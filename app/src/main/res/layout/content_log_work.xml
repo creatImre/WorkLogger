@@ -9,4 +9,10 @@
     tools:context="com.hw.szoftarch.worklogger.LogWorkActivity"
     tools:showIn="@layout/app_bar_log_work">
 
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical"/>
+
 </android.support.constraint.ConstraintLayout>
