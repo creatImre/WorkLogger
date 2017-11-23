@@ -1,21 +1,12 @@
 package com.hw.szoftarch.worklogger.entities;
 
-import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 
-import io.realm.RealmList;
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
-
-public class Issue extends RealmObject {
-    @PrimaryKey
+public class Issue {
     private long id;
-
     private String name;
     private String description;
-
     private Project project;
-
-    private RealmList<WorkingHour> workingHours;
 
     public Issue() {
         super();
@@ -56,21 +47,12 @@ public class Issue extends RealmObject {
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", project=" + project +
-                ", workingHoursIds=" + getWorkingHourIds() +
                 '}';
     }
 
-    @NonNull
-    private String getWorkingHourIds() {
-        StringBuilder result = new StringBuilder("[");
-        for(WorkingHour workingHour : workingHours) {
-            if (result.toString().equals("[")) {
-                result.append(" ").append(workingHour.getId());
-            } else {
-                result.append(", ").append(workingHour.getId());
-            }
-        }
-        result.append("]");
-        return result.toString();
+    @VisibleForTesting
+    public void setId(long id) {
+        this.id = id;
     }
+
 }

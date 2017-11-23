@@ -1,22 +1,11 @@
 package com.hw.szoftarch.worklogger.entities;
 
-import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 
-import java.util.List;
-
-import io.realm.RealmList;
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
-
-public class Project  extends RealmObject {
-
-    @PrimaryKey
+public class Project {
     private long id;
-
     private String name;
     private String description;
-
-    private RealmList<Issue> issues;
 
     public Project() {
         super();
@@ -42,35 +31,17 @@ public class Project  extends RealmObject {
         return id;
     }
 
-    public List<Issue> getIssues() {
-        return issues;
-    }
-
-    public void setIssues(RealmList<Issue> issues) {
-        this.issues = issues;
-    }
-
     @Override
     public String toString() {
         return "Project{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                ", issues=" +  getIssueIds() +
                 '}';
     }
 
-    @NonNull
-    private String getIssueIds() {
-        StringBuilder result = new StringBuilder("[");
-        for(Issue issue : issues) {
-            if (result.toString().equals("[")) {
-                result.append(" ").append(issue.getId());
-            } else {
-                result.append(", ").append(issue.getId());
-            }
-        }
-        result.append("]");
-        return result.toString();
+    @VisibleForTesting
+    public void setId(int id) {
+        this.id = id;
     }
 }
