@@ -2,15 +2,18 @@ package com.hw.szoftarch.worklogger;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -19,7 +22,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,7 +35,20 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.hw.szoftarch.worklogger.entities.Issue;
+import com.hw.szoftarch.worklogger.entities.Project;
+import com.hw.szoftarch.worklogger.entities.User;
+import com.hw.szoftarch.worklogger.entities.WorkingHour;
+import com.hw.szoftarch.worklogger.networking.RetrofitClient;
+import com.hw.szoftarch.worklogger.networking.WorkLoggerService;
 import com.squareup.picasso.Picasso;
+
+import java.util.Calendar;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LogWorkActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
@@ -41,6 +59,8 @@ public class LogWorkActivity extends AppCompatActivity
 
     private boolean doubleBackToExitPressedOnce = false;
     private GoogleApiClient mGoogleApiClient;
+    @Nullable private User mCurrentUser = null;
+    private LogWorkAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +95,7 @@ public class LogWorkActivity extends AppCompatActivity
         TextView navEmail = headerView.findViewById(R.id.nav_profile_email);
 
         final GoogleSignInAccount account = WorkLoggerApplication.getUser();
+        assert account != null;
         navName.setText(account.getDisplayName());
         navEmail.setText(account.getEmail());
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -86,7 +107,7 @@ public class LogWorkActivity extends AppCompatActivity
                 .load(account.getPhotoUrl()).transform(new CircleTransform())
                 .resize(iconSize, iconSize)
                 .placeholder(android.R.drawable.sym_def_app_icon)
-                .error(android.R.drawable.sym_def_app_icon)
+                .error(android.R.drawable.sym_def_app_icon) //TODO default image for offline
                 .into(navPicture);
 
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -103,12 +124,142 @@ public class LogWorkActivity extends AppCompatActivity
                 })
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
+
+        final ListView list = findViewById(R.id.list);
+        mAdapter = new LogWorkAdapter(this);
+        list.setAdapter(mAdapter);
+        list.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                askForDelete(position);
+                return true;
+            }
+        });
+    }
+
+    private boolean checkOnline() {
+        final boolean online = WorkLoggerApplication.appIsOnline();
+        if (online) {
+            return true;
+        }
+        Toast.makeText(this, "You're offline. Please go online to complete operation.", Toast.LENGTH_SHORT).show();
+        return false;
+    }
+
+    private boolean checkUser() {
+        if (mCurrentUser != null) {
+            return true;
+        }
+        Toast.makeText(this, "User data cannot be retrieved. Please try again.", Toast.LENGTH_SHORT).show();
+        loadUser();
+        return false;
+    }
+
+    private void askForDelete(final int positionToDelete) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppTheme);
+        builder.setMessage("Are you sure to delete?");
+
+        final String positiveText = getString(android.R.string.ok);
+        builder.setPositiveButton(positiveText, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                completeDeletion(positionToDelete);
+                dialog.dismiss();
+            }
+        });
+
+        String negativeText = getString(android.R.string.cancel);
+        builder.setNegativeButton(negativeText, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder.show();
+    }
+
+    private void completeDeletion(final int positionToDelete) {
+        if (!checkOnline()) {
+            return;
+        }
+        final WorkingHour workingHourToDelete = (WorkingHour) mAdapter.getItem(positionToDelete);
+
+        final WorkLoggerService service = new RetrofitClient().createService();
+        final Call<String> call = service.removeWorkingHour(workingHourToDelete);
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                if (response.isSuccessful()) {
+                    Log.d(LogWorkActivity.class.getName(), "removeWorkingHour was successful");
+                    mAdapter.remove(positionToDelete);
+                } else {
+                    Log.d(LogWorkActivity.class.getName(), "removeWorkingHour was unsuccessful, but not failed");
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                Log.d(LogWorkActivity.class.getName(), "removeWorkingHour failed: " + t.getMessage());
+            }
+        });
+    }
+
+    private void loadUser() {
+        if (!checkOnline()) {
+            return;
+        }
+        final WorkLoggerService service = new RetrofitClient().createService();
+        final Call<User> call = service.login();
+        call.enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(@NonNull Call<User> call, @NonNull Response<User> response) {
+                if (response.isSuccessful()) {
+                    Log.d(LogWorkActivity.class.getName(), "login was successful");
+                    final User responseUser = response.body();
+                    if (responseUser == null) {
+                        Log.d(LogWorkActivity.class.getName(), "login was successful, but null user returned");
+                    } else {
+                        mCurrentUser = responseUser;
+                    }
+                } else {
+                    Log.d(LogWorkActivity.class.getName(), "login was unsuccessful, but not failed");
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
+                Log.d(LogWorkActivity.class.getName(), "login failed: " + t.getMessage());
+            }
+        });
+    }
+
+    private void loadWorkingHours() {
+        if (!checkOnline()) {
+            return;
+        }
+        final WorkLoggerService service = new RetrofitClient().createService();
+        final Call<List<WorkingHour>> call = service.getWorkingHoursByUser();
+        call.enqueue(new Callback<List<WorkingHour>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<WorkingHour>> call, @NonNull Response<List<WorkingHour>> response) {
+                if (response.isSuccessful()) {
+                    Log.d(LogWorkActivity.class.getName(), "getWorkingHoursByUser was successful");
+                    mAdapter.setWorkingHours(response.body());
+                } else {
+                    Log.d(LogWorkActivity.class.getName(), "getWorkingHoursByUser was unsuccessful, but not failed");
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<List<WorkingHour>> call, @NonNull Throwable t) {
+                Log.d(LogWorkActivity.class.getName(), "getWorkingHoursByUser failed: " + t.getMessage());
+            }
+        });
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         mGoogleApiClient.connect();
+        loadUser();
+        loadWorkingHours();
     }
 
     @Override
@@ -119,7 +270,7 @@ public class LogWorkActivity extends AppCompatActivity
                 animateFAB();
                 break;
             case R.id.fab_manual:
-                addManually();
+                addDebugWorkingHour();
                 break;
             case R.id.fab_stopwatch:
                 startStopWatch();
@@ -127,12 +278,57 @@ public class LogWorkActivity extends AppCompatActivity
         }
     }
 
-    private void addManually() {
+    private void addDebugWorkingHour() {
+        if (!checkOnline()) {
+            return;
+        }
+        if (!checkUser()) {
+            return;
+        }
+        final WorkingHour workingHourToAdd = createDummyWorkingHour();
 
+        final WorkLoggerService service = new RetrofitClient().createService();
+        final Call<String> call = service.addWorkingHour(workingHourToAdd);
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                if (response.isSuccessful()) {
+                    Log.d(LogWorkActivity.class.getName(), "addWorkingHour was successful");
+                    mAdapter.add(workingHourToAdd);
+                } else {
+                    Log.d(LogWorkActivity.class.getName(), "addWorkingHour was unsuccessful, but not failed");
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                Log.d(LogWorkActivity.class.getName(), "addWorkingHour failed: " + t.getMessage());
+            }
+        });
+    }
+
+    @NonNull
+    private WorkingHour createDummyWorkingHour() {
+        final Project project = new Project();
+        project.setDescription("descr1");
+        project.setName("project1");
+        project.setId(1);
+
+        final Issue issue = new Issue();
+        issue.setDescription("issue1");
+        issue.setDescription("descr1");
+        issue.setId(1);
+        issue.setProject(project);
+
+        final WorkingHour workingHourToAdd = new WorkingHour();
+        workingHourToAdd.setDuration(10L);
+        workingHourToAdd.setStarting(Calendar.getInstance().getTime().getTime());
+        workingHourToAdd.setIssue(issue);
+        workingHourToAdd.setUser(mCurrentUser);
+        return workingHourToAdd;
     }
 
     private void startStopWatch() {
-
+        Toast.makeText(this, "No function attached yet.", Toast.LENGTH_SHORT).show();
     }
 
     public void animateFAB() {
