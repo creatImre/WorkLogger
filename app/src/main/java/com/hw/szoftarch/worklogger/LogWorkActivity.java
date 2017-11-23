@@ -12,6 +12,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -53,6 +54,8 @@ import retrofit2.Response;
 public class LogWorkActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
 
+    private static final String LOG_TAG = LogWorkActivity.class.getName();
+
     private Boolean isFabOpen = false;
     private FloatingActionButton fab, fabManual, fabStopwatch;
     private Animation fab_open, fab_close, rotate_forward, rotate_backward;
@@ -61,6 +64,7 @@ public class LogWorkActivity extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     @Nullable private User mCurrentUser = null;
     private LogWorkAdapter mAdapter;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,13 +123,23 @@ public class LogWorkActivity extends AppCompatActivity
                 .enableAutoManage(this, new GoogleApiClient.OnConnectionFailedListener() {
                     @Override
                     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-                        Log.d(LogWorkActivity.class.getName(), "onConnectionFailed:" + connectionResult);
+                        Log.d(LOG_TAG, "onConnectionFailed:" + connectionResult);
                     }
                 })
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
-        final ListView list = findViewById(R.id.list);
+        mSwipeRefreshLayout = findViewById(R.id.swiperefresh);
+        mSwipeRefreshLayout.setOnRefreshListener(
+                new SwipeRefreshLayout.OnRefreshListener() {
+                    @Override
+                    public void onRefresh() {
+                        Log.d(LOG_TAG, "onRefresh called from SwipeRefreshLayout");
+                        updateData();
+                    }
+                }
+        );
+        final ListView list = findViewById(android.R.id.list);
         mAdapter = new LogWorkAdapter(this);
         list.setAdapter(mAdapter);
         list.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -135,6 +149,15 @@ public class LogWorkActivity extends AppCompatActivity
                 return true;
             }
         });
+    }
+
+    private void updateData() {
+        //TODO
+        if (!checkOnline()) {
+            mSwipeRefreshLayout.setRefreshing(false);
+            return;
+        }
+        loadWorkingHours();
     }
 
     private boolean checkOnline() {
@@ -190,15 +213,15 @@ public class LogWorkActivity extends AppCompatActivity
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
                 if (response.isSuccessful()) {
-                    Log.d(LogWorkActivity.class.getName(), "removeWorkingHour was successful");
+                    Log.d(LOG_TAG, "removeWorkingHour was successful");
                     mAdapter.remove(positionToDelete);
                 } else {
-                    Log.d(LogWorkActivity.class.getName(), "removeWorkingHour was unsuccessful, but not failed");
+                    Log.d(LOG_TAG, "removeWorkingHour was unsuccessful, but not failed");
                 }
             }
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-                Log.d(LogWorkActivity.class.getName(), "removeWorkingHour failed: " + t.getMessage());
+                Log.d(LOG_TAG, "removeWorkingHour failed: " + t.getMessage());
             }
         });
     }
@@ -213,20 +236,20 @@ public class LogWorkActivity extends AppCompatActivity
             @Override
             public void onResponse(@NonNull Call<User> call, @NonNull Response<User> response) {
                 if (response.isSuccessful()) {
-                    Log.d(LogWorkActivity.class.getName(), "login was successful");
+                    Log.d(LOG_TAG, "login was successful");
                     final User responseUser = response.body();
                     if (responseUser == null) {
-                        Log.d(LogWorkActivity.class.getName(), "login was successful, but null user returned");
+                        Log.d(LOG_TAG, "login was successful, but null user returned");
                     } else {
                         mCurrentUser = responseUser;
                     }
                 } else {
-                    Log.d(LogWorkActivity.class.getName(), "login was unsuccessful, but not failed");
+                    Log.d(LOG_TAG, "login was unsuccessful, but not failed");
                 }
             }
             @Override
             public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
-                Log.d(LogWorkActivity.class.getName(), "login failed: " + t.getMessage());
+                Log.d(LOG_TAG, "login failed: " + t.getMessage());
             }
         });
     }
@@ -241,15 +264,17 @@ public class LogWorkActivity extends AppCompatActivity
             @Override
             public void onResponse(@NonNull Call<List<WorkingHour>> call, @NonNull Response<List<WorkingHour>> response) {
                 if (response.isSuccessful()) {
-                    Log.d(LogWorkActivity.class.getName(), "getWorkingHoursByUser was successful");
+                    Log.d(LOG_TAG, "getWorkingHoursByUser was successful");
                     mAdapter.setWorkingHours(response.body());
                 } else {
-                    Log.d(LogWorkActivity.class.getName(), "getWorkingHoursByUser was unsuccessful, but not failed");
+                    Log.d(LOG_TAG, "getWorkingHoursByUser was unsuccessful, but not failed");
                 }
+                mSwipeRefreshLayout.setRefreshing(false);
             }
             @Override
             public void onFailure(@NonNull Call<List<WorkingHour>> call, @NonNull Throwable t) {
-                Log.d(LogWorkActivity.class.getName(), "getWorkingHoursByUser failed: " + t.getMessage());
+                Log.d(LOG_TAG, "getWorkingHoursByUser failed: " + t.getMessage());
+                mSwipeRefreshLayout.setRefreshing(false);
             }
         });
     }
@@ -293,15 +318,15 @@ public class LogWorkActivity extends AppCompatActivity
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
                 if (response.isSuccessful()) {
-                    Log.d(LogWorkActivity.class.getName(), "addWorkingHour was successful");
+                    Log.d(LOG_TAG, "addWorkingHour was successful");
                     mAdapter.add(workingHourToAdd);
                 } else {
-                    Log.d(LogWorkActivity.class.getName(), "addWorkingHour was unsuccessful, but not failed");
+                    Log.d(LOG_TAG, "addWorkingHour was unsuccessful, but not failed");
                 }
             }
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-                Log.d(LogWorkActivity.class.getName(), "addWorkingHour failed: " + t.getMessage());
+                Log.d(LOG_TAG, "addWorkingHour failed: " + t.getMessage());
             }
         });
     }
@@ -376,14 +401,14 @@ public class LogWorkActivity extends AppCompatActivity
                     new ResultCallback<Status>() {
                         @Override
                         public void onResult(@NonNull Status status) {
-                            Log.d(LogWorkActivity.class.getName(), "signOut status: " + status.getStatus());
+                            Log.d(LOG_TAG, "signOut status: " + status.getStatus());
                             finish();
                             final Intent intent = new Intent(LogWorkActivity.this, SignInActivity.class);
                             startActivity(intent);
                         }
                     });
         } catch(Exception e) {
-            Log.e(LogWorkActivity.class.getName(), "Cannot sign out: " + e.getMessage());
+            Log.e(LOG_TAG, "Cannot sign out: " + e.getMessage());
         }
     }
 
@@ -395,16 +420,13 @@ public class LogWorkActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         final int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.menu_refresh) {
+            Log.d(LOG_TAG, "Refresh menu item selected");
+            mSwipeRefreshLayout.setRefreshing(true);
+            updateData();
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
