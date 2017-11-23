@@ -3,6 +3,8 @@ package com.hw.szoftarch.worklogger;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -61,23 +63,25 @@ public class WorkLoggerApplication extends Application {
         return account.getIdToken();
     }
 
-    public static void verifyTokenOnServer() {
-        final String idToken = getUserIdToken();
-        if (idToken == null) {
-            return;
-        }
-        final boolean valid = ServerHelper.validate(idToken);
-        if (!valid) {
-            ServerHelper.addUser(idToken);
-        }
-    }
-
     public static String getServiceUrl() {
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         final String ip = preferences.getString(IP_ADDRESS_KEY, "192.168.1.15");
         final String socket = preferences.getString(SOCKET_KEY, "8080");
         final String serviceName = preferences.getString(SERVICE_NAME_KEY, "service/rest");
         return "http://" + ip + ":" + socket + "/" + serviceName + "/";
+    }
+
+    public static boolean appIsOnline() {
+        return mInstance.isOnline();
+    }
+
+    public boolean isOnline(){
+        final ConnectivityManager manager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (manager == null) {
+            return false;
+        }
+        final NetworkInfo networkInfo = manager.getActiveNetworkInfo();
+        return networkInfo != null && networkInfo.isConnected();
     }
 
 }
