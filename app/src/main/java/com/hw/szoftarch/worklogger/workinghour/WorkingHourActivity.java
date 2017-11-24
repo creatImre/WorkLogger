@@ -15,7 +15,12 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,9 +28,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,27 +44,28 @@ import com.hw.szoftarch.worklogger.R;
 import com.hw.szoftarch.worklogger.SignInActivity;
 import com.hw.szoftarch.worklogger.WorkLoggerApplication;
 import com.hw.szoftarch.worklogger.entities.Issue;
-import com.hw.szoftarch.worklogger.entities.Project;
 import com.hw.szoftarch.worklogger.entities.User;
 import com.hw.szoftarch.worklogger.entities.WorkingHour;
 import com.hw.szoftarch.worklogger.networking.RetrofitClient;
 import com.hw.szoftarch.worklogger.networking.WorkLoggerService;
+import com.hw.szoftarch.worklogger.recycler_tools.ClickListener;
+import com.hw.szoftarch.worklogger.recycler_tools.DeleteCallback;
+import com.hw.szoftarch.worklogger.recycler_tools.RecyclerTouchListener;
+import com.hw.szoftarch.worklogger.recycler_tools.SwipeTouchHelperCallback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LogWorkActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener, WorkingHourAddFragment.AddCallback, WorkingHourEditFragment.EditCallback {
+public class WorkingHourActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener, WorkingHourAddFragment.AddCallback, WorkingHourEditFragment.EditCallback, DeleteCallback {
 
-    private static final String LOG_TAG = LogWorkActivity.class.getName();
+    private static final String LOG_TAG = WorkingHourActivity.class.getName();
 
     private Boolean isFabOpen = false;
     private FloatingActionButton fab, fabManual, fabStopwatch;
@@ -69,7 +73,8 @@ public class LogWorkActivity extends AppCompatActivity
 
     private boolean doubleBackToExitPressedOnce = false;
     private GoogleApiClient mGoogleApiClient;
-    private LogWorkAdapter mAdapter;
+    //private LogWorkAdapter mAdapter;
+    private WorkingHourAdapter mAdapter;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private @NonNull List<Issue> mRetrievedIssues = new ArrayList<>();
 
@@ -92,7 +97,7 @@ public class LogWorkActivity extends AppCompatActivity
         rotate_forward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_forward);
         rotate_backward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_backward);
 
-        final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        final DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -146,25 +151,41 @@ public class LogWorkActivity extends AppCompatActivity
                     }
                 }
         );
-        final ListView list = findViewById(android.R.id.list);
-        mAdapter = new LogWorkAdapter(this);
-        list.setAdapter(mAdapter);
-        list.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                if (!checkOnline()) {
-                    return true;
-                }
-                final WorkingHourEditFragment editFragment = new WorkingHourEditFragment();
-                editFragment.putIssues(mRetrievedIssues);
-                editFragment.putWorkingHour((WorkingHour) mAdapter.getItem(position));
-                editFragment.show(getFragmentManager(), WorkingHourEditFragment.TAG);
-                return true;
-            }
-        });
+        initList();
         loadUser();
         loadIssues();
         loadWorkingHours();
+    }
+
+    private void initList() {
+        mAdapter = new WorkingHourAdapter(this);
+        final RecyclerView foodsRecyclerView = findViewById(android.R.id.list);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+        foodsRecyclerView.setLayoutManager(mLayoutManager);
+        foodsRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        foodsRecyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
+        foodsRecyclerView.setAdapter(mAdapter);
+        foodsRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), foodsRecyclerView,
+                new ClickListener() {
+                    @Override
+                    public void onClick(View view, int position) {
+                    }
+
+                    @Override
+                    public void onLongClick(View view, int position) {
+                        if (!checkOnline()) {
+                            return;
+                        }
+                        final WorkingHourEditFragment editFragment = new WorkingHourEditFragment();
+                        editFragment.putIssues(mRetrievedIssues);
+                        editFragment.putWorkingHour(mAdapter.getItem(position));
+                        editFragment.show(getFragmentManager(), WorkingHourEditFragment.TAG);
+                    }
+                }));
+
+        ItemTouchHelper.Callback callback = new SwipeTouchHelperCallback(mAdapter);
+        ItemTouchHelper mTouchHelper = new ItemTouchHelper(callback);
+        mTouchHelper.attachToRecyclerView(foodsRecyclerView);
     }
 
     @Override
@@ -247,7 +268,7 @@ public class LogWorkActivity extends AppCompatActivity
                         public void onResult(@NonNull Status status) {
                             Log.d(LOG_TAG, "signOut status: " + status.getStatus());
                             finish();
-                            final Intent intent = new Intent(LogWorkActivity.this, SignInActivity.class);
+                            final Intent intent = new Intent(WorkingHourActivity.this, SignInActivity.class);
                             startActivity(intent);
                         }
                     });
@@ -272,15 +293,6 @@ public class LogWorkActivity extends AppCompatActivity
             return true;
         }
         Toast.makeText(this, "You're offline. Please go online to complete operation.", Toast.LENGTH_SHORT).show();
-        return false;
-    }
-
-    private boolean checkUser() {
-        if (WorkLoggerApplication.currentUserExists()) {
-            return true;
-        }
-        Toast.makeText(this, "User data cannot be retrieved. Please try again.", Toast.LENGTH_SHORT).show();
-        loadUser();
         return false;
     }
 
@@ -311,10 +323,9 @@ public class LogWorkActivity extends AppCompatActivity
         if (!checkOnline()) {
             return;
         }
-        final WorkingHour workingHourToDelete = (WorkingHour) mAdapter.getItem(positionToDelete);
 
         final WorkLoggerService service = new RetrofitClient().createService();
-        final Call<String> call = service.removeWorkingHour(workingHourToDelete.getId());
+        final Call<String> call = service.removeWorkingHour(mAdapter.getItemId(positionToDelete));
         call.enqueue(new Callback<String>() {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
@@ -323,13 +334,13 @@ public class LogWorkActivity extends AppCompatActivity
                     mAdapter.remove(positionToDelete);
                 } else {
                     Log.d(LOG_TAG, "removeWorkingHour was unsuccessful: " + response.message());
-                    Toast.makeText(LogWorkActivity.this, "Cannot delete on server. Please try again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(WorkingHourActivity.this, "Cannot delete on server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "removeWorkingHour failed: " + t.getMessage());
-                Toast.makeText(LogWorkActivity.this, "Cannot delete on server. Please try again.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(WorkingHourActivity.this, "Cannot delete on server. Please try again.", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -353,13 +364,13 @@ public class LogWorkActivity extends AppCompatActivity
                     }
                 } else {
                     Log.d(LOG_TAG, "login was unsuccessful: " + response.message());
-                    Toast.makeText(LogWorkActivity.this, "Cannot get current user data from server. Please try again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(WorkingHourActivity.this, "Cannot get current user data from server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
             public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "login failed: " + t.getMessage());
-                Toast.makeText(LogWorkActivity.this, "Cannot get current user data from server. Please try again.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(WorkingHourActivity.this, "Cannot get current user data from server. Please try again.", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -378,14 +389,14 @@ public class LogWorkActivity extends AppCompatActivity
                     mAdapter.setWorkingHours(response.body());
                 } else {
                     Log.d(LOG_TAG, "getWorkingHoursByUser was unsuccessful: " + response.message());
-                    Toast.makeText(LogWorkActivity.this, "Cannot update data. Please try again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(WorkingHourActivity.this, "Cannot update data. Please try again.", Toast.LENGTH_SHORT).show();
                 }
                 mSwipeRefreshLayout.setRefreshing(false);
             }
             @Override
             public void onFailure(@NonNull Call<List<WorkingHour>> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "getWorkingHoursByUser failed: " + t.getMessage());
-                Toast.makeText(LogWorkActivity.this, "Cannot update data. Please try again.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(WorkingHourActivity.this, "Cannot update data. Please try again.", Toast.LENGTH_SHORT).show();
                 mSwipeRefreshLayout.setRefreshing(false);
             }
         });
@@ -411,14 +422,14 @@ public class LogWorkActivity extends AppCompatActivity
                     }
                 } else {
                     Log.d(LOG_TAG, "getIssues was unsuccessful: " + response.message());
-                    Toast.makeText(LogWorkActivity.this, "Cannot load issues data. Please try again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(WorkingHourActivity.this, "Cannot load issues data. Please try again.", Toast.LENGTH_SHORT).show();
                 }
                 mSwipeRefreshLayout.setRefreshing(false);
             }
             @Override
             public void onFailure(@NonNull Call<List<Issue>> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "getIssues failed: " + t.getMessage());
-                Toast.makeText(LogWorkActivity.this, "Cannot load issues data. Please try again.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(WorkingHourActivity.this, "Cannot load issues data. Please try again.", Toast.LENGTH_SHORT).show();
                 mSwipeRefreshLayout.setRefreshing(false);
             }
         });
@@ -462,13 +473,13 @@ public class LogWorkActivity extends AppCompatActivity
                     mAdapter.add(response.body());
                 } else {
                     Log.d(LOG_TAG, "addWorkingHour was unsuccessful: " + response.message());
-                    Toast.makeText(LogWorkActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(WorkingHourActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
             public void onFailure(@NonNull Call<WorkingHour> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "addWorkingHour failed: " + t.getMessage());
-                Toast.makeText(LogWorkActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(WorkingHourActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -489,52 +500,15 @@ public class LogWorkActivity extends AppCompatActivity
                     mAdapter.update(workingHour);
                 } else {
                     Log.d(LOG_TAG, "updateWorkingHour was unsuccessful: " + response.message());
-                    Toast.makeText(LogWorkActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(WorkingHourActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "updateWorkingHour failed: " + t.getMessage());
-                Toast.makeText(LogWorkActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(WorkingHourActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    @NonNull
-    private WorkingHour createDummyWorkingHour() {
-        final Project project = new Project();
-        project.setDescription("descr1");
-        project.setName("project1");
-        project.setId(1);
-
-        final Issue issue = new Issue();
-        issue.setName("issue1");
-        issue.setDescription("descr1");
-        issue.setId(1);
-        issue.setProject(project);
-
-        final WorkingHour workingHourToAdd = new WorkingHour();
-        workingHourToAdd.setDuration(10L);
-        workingHourToAdd.setStarting(Calendar.getInstance().getTime().getTime());
-        workingHourToAdd.setIssue(issue);
-        workingHourToAdd.setUser(WorkLoggerApplication.getCurrentUser());
-        return workingHourToAdd;
-    }
-
-    @NonNull
-    private WorkingHour createDummyWorkingHourFromRetrievedIssues() {
-        if (mRetrievedIssues.isEmpty()) {
-            Log.d(LOG_TAG, "retrieved issues list is empty. Returning a WorkingHour with locally created issue");
-            return createDummyWorkingHour();
-        }
-        Random random = new Random();
-        int index = random.nextInt(mRetrievedIssues.size());
-
-        final WorkingHour workingHourToAdd = new WorkingHour();
-        workingHourToAdd.setDuration(10L);
-        workingHourToAdd.setStarting(Calendar.getInstance().getTime().getTime());
-        workingHourToAdd.setIssue(mRetrievedIssues.get(index));
-        return workingHourToAdd;
     }
 
     private void startStopWatch() {
@@ -571,5 +545,10 @@ public class LogWorkActivity extends AppCompatActivity
     @Override
     public void onWorkingHourEdited(final WorkingHour editedWorkingHour) {
         updateWorkingHour(editedWorkingHour);
+    }
+
+    @Override
+    public void deleteItem(final int positionToDelete) {
+        askForDelete(positionToDelete);
     }
 }

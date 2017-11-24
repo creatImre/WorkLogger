@@ -30,19 +30,6 @@ public class WorkLoggerApplication extends Application {
         return GoogleSignIn.getLastSignedInAccount(getContext());
     }
 
-    @NonNull
-    public static String getGoogleId() {
-        final GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getContext());
-        if (account == null) {
-            return "not logged in";
-        }
-        final String id = account.getId();
-        if (id == null) {
-            return "not logged in";
-        }
-        return id;
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -51,11 +38,6 @@ public class WorkLoggerApplication extends Application {
 
     public static Context getContext() {
         return mInstance.getApplicationContext();
-    }
-
-    public static boolean userLoggedIn() {
-        final GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getContext());
-        return account != null;
     }
 
     @Nullable

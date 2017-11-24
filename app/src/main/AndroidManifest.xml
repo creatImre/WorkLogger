@@ -18,7 +18,7 @@
             android:theme="@style/ThemeOverlay.MyNoTitleActivity">
         </activity>
         <activity
-            android:name=".workinghour.LogWorkActivity"
+            android:name=".workinghour.WorkingHourActivity"
             android:label="@string/title_activity_log_work"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>

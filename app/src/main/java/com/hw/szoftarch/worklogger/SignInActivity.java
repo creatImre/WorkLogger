@@ -24,7 +24,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.hw.szoftarch.worklogger.entities.User;
 import com.hw.szoftarch.worklogger.networking.RetrofitClient;
 import com.hw.szoftarch.worklogger.networking.WorkLoggerService;
-import com.hw.szoftarch.worklogger.workinghour.LogWorkActivity;
+import com.hw.szoftarch.worklogger.workinghour.WorkingHourActivity;
 
 import java.io.IOException;
 
@@ -151,7 +151,7 @@ public class SignInActivity extends AppCompatActivity implements
     private void updateUI(boolean signedIn) {
         if (signedIn) {
             finish();
-            Intent intent = new Intent(this, LogWorkActivity.class);
+            Intent intent = new Intent(this, WorkingHourActivity.class);
             startActivity(intent);
         } else {
             mStatusTextView.setText(R.string.signed_out);
