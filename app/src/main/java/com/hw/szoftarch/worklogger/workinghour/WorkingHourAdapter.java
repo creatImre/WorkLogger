@@ -20,6 +20,7 @@ class WorkingHourAdapter extends RecyclerView.Adapter<WorkingHourAdapter.ItemVie
         implements ItemSwipeHelperAdapter {
     private List<WorkingHour> mWorkingHours = new ArrayList<>();
     private DeleteCallback mDeleteCallback;
+    private boolean needToNotifyItem = true;
 
     WorkingHourAdapter(final DeleteCallback deleteCallback) {
         this.mDeleteCallback = deleteCallback;
@@ -27,6 +28,17 @@ class WorkingHourAdapter extends RecyclerView.Adapter<WorkingHourAdapter.ItemVie
 
     WorkingHour getItem(final int position) {
         return mWorkingHours.get(position);
+    }
+
+    void setNotNeedToNotify() {
+        needToNotifyItem = false;
+    }
+
+    void notifyItemChangedIfNeeded(final int position) {
+        if (needToNotifyItem) {
+            notifyItemChanged(position);
+        }
+        needToNotifyItem = true;
     }
 
     class ItemViewHolder extends RecyclerView.ViewHolder {
@@ -70,7 +82,7 @@ class WorkingHourAdapter extends RecyclerView.Adapter<WorkingHourAdapter.ItemVie
     }
 
     void remove(final int positionToDelete) {
-        final WorkingHour workingHour = mWorkingHours.remove(positionToDelete);
+        mWorkingHours.remove(positionToDelete);
         notifyItemRemoved(positionToDelete);
     }
 
@@ -92,6 +104,7 @@ class WorkingHourAdapter extends RecyclerView.Adapter<WorkingHourAdapter.ItemVie
 
     void setWorkingHours(final List<WorkingHour> workingHours) {
         mWorkingHours = workingHours;
+        Collections.sort(mWorkingHours, WorkingHour.WorkingHourComparator.getInstance());
         notifyDataSetChanged();
     }
 

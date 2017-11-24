@@ -304,6 +304,7 @@ public class WorkingHourActivity extends AppCompatActivity
         builder.setPositiveButton(positiveText, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                mAdapter.setNotNeedToNotify();
                 completeDeletion(positionToDelete);
                 dialog.dismiss();
             }
@@ -316,11 +317,18 @@ public class WorkingHourActivity extends AppCompatActivity
                 dialog.dismiss();
             }
         });
+        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(final DialogInterface dialogInterface) {
+                mAdapter.notifyItemChangedIfNeeded(positionToDelete);
+            }
+        });
         builder.show();
     }
 
     private void completeDeletion(final int positionToDelete) {
         if (!checkOnline()) {
+            mAdapter.notifyItemChanged(positionToDelete);
             return;
         }
 
@@ -333,12 +341,14 @@ public class WorkingHourActivity extends AppCompatActivity
                     Log.d(LOG_TAG, "removeWorkingHour was successful");
                     mAdapter.remove(positionToDelete);
                 } else {
+                    mAdapter.notifyItemChanged(positionToDelete);
                     Log.d(LOG_TAG, "removeWorkingHour was unsuccessful: " + response.message());
                     Toast.makeText(WorkingHourActivity.this, "Cannot delete on server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                mAdapter.notifyItemChanged(positionToDelete);
                 Log.d(LOG_TAG, "removeWorkingHour failed: " + t.getMessage());
                 Toast.makeText(WorkingHourActivity.this, "Cannot delete on server. Please try again.", Toast.LENGTH_SHORT).show();
             }
