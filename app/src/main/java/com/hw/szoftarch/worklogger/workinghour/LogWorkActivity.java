@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
@@ -49,6 +50,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -57,7 +59,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LogWorkActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
+        implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener, WorkingHourAddFragment.AddCallback, WorkingHourEditFragment.EditCallback {
 
     private static final String LOG_TAG = LogWorkActivity.class.getName();
 
@@ -150,7 +152,13 @@ public class LogWorkActivity extends AppCompatActivity
         list.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                askForDelete(position);
+                if (!checkOnline()) {
+                    return true;
+                }
+                final WorkingHourEditFragment editFragment = new WorkingHourEditFragment();
+                editFragment.putIssues(mRetrievedIssues);
+                editFragment.putWorkingHour((WorkingHour) mAdapter.getItem(position));
+                editFragment.show(getFragmentManager(), WorkingHourEditFragment.TAG);
                 return true;
             }
         });
@@ -163,6 +171,12 @@ public class LogWorkActivity extends AppCompatActivity
     protected void onStart() {
         super.onStart();
         mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onResume() {
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        super.onResume();
     }
 
     @Override
@@ -271,7 +285,7 @@ public class LogWorkActivity extends AppCompatActivity
     }
 
     private void askForDelete(final int positionToDelete) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppTheme);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Are you sure to delete?");
 
         final String positiveText = getString(android.R.string.ok);
@@ -418,7 +432,12 @@ public class LogWorkActivity extends AppCompatActivity
                 animateFAB();
                 break;
             case R.id.fab_manual:
-                addDebugWorkingHour();
+                if (!checkOnline()) {
+                    return;
+                }
+                final WorkingHourAddFragment addFragment = new WorkingHourAddFragment();
+                addFragment.putIssues(mRetrievedIssues);
+                addFragment.show(getFragmentManager(), WorkingHourAddFragment.TAG);
                 break;
             case R.id.fab_stopwatch:
                 startStopWatch();
@@ -426,14 +445,10 @@ public class LogWorkActivity extends AppCompatActivity
         }
     }
 
-    private void addDebugWorkingHour() {
+    private void addWorkingHour(final WorkingHour workingHourToAdd) {
         if (!checkOnline()) {
             return;
         }
-        if (!checkUser()) {
-            return;
-        }
-        final WorkingHour workingHourToAdd = createDummyWorkingHourFromRetrievedIssues();
         Log.d(LOG_TAG, "sending to server: " + workingHourToAdd);
 
         final WorkLoggerService service = new RetrofitClient().createService();
@@ -453,6 +468,33 @@ public class LogWorkActivity extends AppCompatActivity
             @Override
             public void onFailure(@NonNull Call<WorkingHour> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "addWorkingHour failed: " + t.getMessage());
+                Toast.makeText(LogWorkActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateWorkingHour(final WorkingHour workingHour) {
+        if (!checkOnline()) {
+            return;
+        }
+        Log.d(LOG_TAG, "sending to server: " + workingHour);
+
+        final WorkLoggerService service = new RetrofitClient().createService();
+        final Call<String> call = service.updateWorkingHour(workingHour);
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                if (response.isSuccessful()) {
+                    Log.d(LOG_TAG, "updateWorkingHour was successful");
+                    mAdapter.update(workingHour);
+                } else {
+                    Log.d(LOG_TAG, "updateWorkingHour was unsuccessful: " + response.message());
+                    Toast.makeText(LogWorkActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                Log.d(LOG_TAG, "updateWorkingHour failed: " + t.getMessage());
                 Toast.makeText(LogWorkActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
             }
         });
@@ -492,7 +534,6 @@ public class LogWorkActivity extends AppCompatActivity
         workingHourToAdd.setDuration(10L);
         workingHourToAdd.setStarting(Calendar.getInstance().getTime().getTime());
         workingHourToAdd.setIssue(mRetrievedIssues.get(index));
-        workingHourToAdd.setUser(WorkLoggerApplication.getCurrentUser());
         return workingHourToAdd;
     }
 
@@ -518,4 +559,17 @@ public class LogWorkActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onWorkingHourAdded(final long duration, final Issue issue, final Date date) {
+        final WorkingHour workingHour = new WorkingHour();
+        workingHour.setDuration(duration);
+        workingHour.setIssue(issue);
+        workingHour.setStarting(date.getTime());
+        addWorkingHour(workingHour);
+    }
+
+    @Override
+    public void onWorkingHourEdited(final WorkingHour editedWorkingHour) {
+        updateWorkingHour(editedWorkingHour);
+    }
 }

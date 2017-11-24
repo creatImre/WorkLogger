@@ -9,9 +9,8 @@
     android:paddingTop="10dp"
     android:paddingBottom="10dp"
     android:background="?android:attr/selectableItemBackground"
-    android:clickable="true"
     android:longClickable="true"
-    android:focusable="true"
+    android:descendantFocusability="blocksDescendants"
     android:foreground="?selectableItemBackground"
     android:minHeight="?listPreferredItemHeight"
     android:orientation="horizontal">
@@ -20,18 +19,21 @@
         android:id="@+id/start_date"
         android:layout_width="150dp"
         android:textSize="20sp"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:focusable="false"/>
 
     <TextView
-        android:id="@+id/duration"
+        android:id="@+id/work_duration"
         android:layout_toEndOf="@+id/start_date"
         android:layout_width="50dp"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:focusable="false"/>
 
     <TextView
         android:id="@+id/issue_name"
-        android:layout_toEndOf="@+id/duration"
+        android:layout_toEndOf="@+id/work_duration"
         android:layout_width="100dp"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:focusable="false"/>
 
 </RelativeLayout>

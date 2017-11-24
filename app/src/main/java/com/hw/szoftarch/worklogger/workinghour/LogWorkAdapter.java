@@ -52,7 +52,7 @@ class LogWorkAdapter extends BaseAdapter {
         final WorkingHour currentItem = (WorkingHour) getItem(position);
 
         TextView textViewStartDate = convertView.findViewById(R.id.start_date);
-        TextView textViewDuration = convertView.findViewById(R.id.duration);
+        TextView textViewDuration = convertView.findViewById(R.id.work_duration);
         TextView textViewIssueName = convertView.findViewById(R.id.issue_name);
 
         textViewStartDate.setText(currentItem.getFormattedDate());
