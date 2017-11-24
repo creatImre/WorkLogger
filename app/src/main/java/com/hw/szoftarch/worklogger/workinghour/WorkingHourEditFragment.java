@@ -3,7 +3,6 @@ package com.hw.szoftarch.worklogger.workinghour;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatEditText;
 import android.support.v7.widget.AppCompatSpinner;
@@ -12,10 +11,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.hw.szoftarch.worklogger.R;
@@ -35,8 +34,9 @@ public class WorkingHourEditFragment extends DialogFragment {
     private WorkingHour mWorkingHour;
 
     private AppCompatEditText durationEditText;
-    private DatePicker datePicker;
     private AppCompatSpinner issueSpinner;
+    private DatePicker datePicker;
+    private TimePicker timePicker;
 
     private EditCallback listener;
 
@@ -75,16 +75,17 @@ public class WorkingHourEditFragment extends DialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View root = inflater.inflate(R.layout.fragment_working_hour, container, false);
         durationEditText = root.findViewById(R.id.duration);
-        datePicker = root.findViewById(R.id.date);
         issueSpinner = root.findViewById(R.id.issue);
-
         final ArrayAdapter<IssueSpinnerItem> arrayAdapter = new ArrayAdapter<>(getActivity(), R.layout.issue_spinner_item, mIssueNames);
         issueSpinner.setAdapter(arrayAdapter);
         issueSpinner.setSelection(0);
+        datePicker = root.findViewById(R.id.date);
+        timePicker = root.findViewById(R.id.time);
+        timePicker.setIs24HourView(true);
 
         durationEditText.setText(String.valueOf(mWorkingHour.getDuration()));
         issueSpinner.setSelection(arrayAdapter.getPosition(getSelectedIssueSpinnerItem(mWorkingHour)));
-        Utils.updateDatePicker(datePicker, mWorkingHour.getStartingDate());
+        Utils.updatePickers(datePicker, timePicker, mWorkingHour.getStartingDate());
 
         final Button btnAdd = root.findViewById(R.id.btn_ok);
         btnAdd.setOnClickListener(new View.OnClickListener() {
@@ -97,7 +98,7 @@ public class WorkingHourEditFragment extends DialogFragment {
 
                 final long duration = Long.parseLong(durationEditText.getText().toString().trim());
                 final Issue issue = ((IssueSpinnerItem) issueSpinner.getSelectedItem()).getIssue();
-                final Date date = Utils.getDateFromDatePicker(datePicker);
+                final Date date = Utils.getDateFromPickers(datePicker, timePicker);
 
                 mWorkingHour.setIssue(issue);
                 mWorkingHour.setStarting(date.getTime());
@@ -117,12 +118,6 @@ public class WorkingHourEditFragment extends DialogFragment {
                 dismiss();
             }
         });
-
-        durationEditText.requestFocus();
-        final InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (imm != null) {
-            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
-        }
         return root;
     }
 

@@ -56,7 +56,7 @@ class LogWorkAdapter extends BaseAdapter {
         TextView textViewIssueName = convertView.findViewById(R.id.issue_name);
 
         textViewStartDate.setText(currentItem.getFormattedDate());
-        textViewDuration.setText((String.valueOf(currentItem.getDuration())));
+        textViewDuration.setText(currentItem.getFormattedDuration());
         textViewIssueName.setText(currentItem.getIssueName());
 
         return convertView;
@@ -70,7 +70,7 @@ class LogWorkAdapter extends BaseAdapter {
 
     public void add(final WorkingHour workingHour) {
         mWorkingHours.add(workingHour);
-        Collections.sort(mWorkingHours, WorkingHour.WorkingHourDateComparator.getInstance());
+        Collections.sort(mWorkingHours, WorkingHour.WorkingHourComparator.getInstance());
         notifyDataSetChanged();
     }
 
@@ -80,7 +80,7 @@ class LogWorkAdapter extends BaseAdapter {
                 mWorkingHours.set(i, workingHour);
             }
         }
-        Collections.sort(mWorkingHours, WorkingHour.WorkingHourDateComparator.getInstance());
+        Collections.sort(mWorkingHours, WorkingHour.WorkingHourComparator.getInstance());
         notifyDataSetChanged();
     }
 }

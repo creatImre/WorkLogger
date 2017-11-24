@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_column="0"
             android:layout_gravity="start"
-            android:text="@android:string/cancel" />
+            android:text="@android:string/cancel"/>
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/btn_ok"
@@ -28,49 +28,81 @@
             android:layout_height="wrap_content"
             android:layout_column="1"
             android:layout_gravity="end"
-            android:text="@android:string/ok" />
+            android:text="@android:string/ok"/>
 
     </GridLayout>
 
-    <GridLayout
+    <ScrollView
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:columnCount="2"
-        android:padding="@dimen/fab_margin">
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_marginBottom="@dimen/fab_margin"
+        android:isScrollContainer="true">
 
-        <android.support.v7.widget.AppCompatTextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_column="0"
-            android:layout_gravity="end"
-            android:text="Duration (hours):"/>
+            android:orientation="vertical">
 
-        <android.support.v7.widget.AppCompatEditText
-            android:id="@+id/duration"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start"
-            android:layout_column="1"
-            android:ems="6"
-            android:imeOptions="actionNext"
-            android:inputType="number"
-            android:selectAllOnFocus="true" />
+            <GridLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:padding="@dimen/fab_margin">
 
-        <android.support.v7.widget.AppCompatTextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:text="Issue:"/>
+                <android.support.v7.widget.AppCompatTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_column="0"
+                    android:layout_gravity="end"
+                    android:text="Duration (hours):"/>
 
-        <android.support.v7.widget.AppCompatSpinner
-            android:id="@+id/issue"
-            android:layout_marginTop="8dp"/>
-    </GridLayout>
+                <android.support.v7.widget.AppCompatEditText
+                    android:id="@+id/duration"
+                    android:layout_height="wrap_content"
+                    android:layout_column="1"
+                    android:layout_gravity="start"
+                    android:ems="6"
+                    android:imeOptions="actionDone"
+                    android:inputType="number"
+                    android:selectAllOnFocus="true"/>
 
-    <DatePicker
-        android:id="@+id/date"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:calendarViewShown="false"
-        android:layout_marginTop="14dp"
-        android:datePickerMode="spinner"/>
+                <android.support.v7.widget.AppCompatTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:text="Issue:"/>
+
+                <android.support.v7.widget.AppCompatSpinner
+                    android:id="@+id/issue"
+                    android:layout_marginTop="8dp"/>
+            </GridLayout>
+
+            <LinearLayout
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="vertical">
+
+                <TimePicker
+                    android:id="@+id/time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:calendarViewShown="false"
+                    android:layout_gravity="center_horizontal"
+                    android:timePickerMode="spinner"/>
+
+                <DatePicker
+                    android:id="@+id/date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:calendarViewShown="false"
+                    android:layout_gravity="center_horizontal"
+                    android:datePickerMode="spinner"/>
+
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

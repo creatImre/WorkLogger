@@ -71,6 +71,10 @@ public class WorkingHour {
         return duration;
     }
 
+    public String getFormattedDuration() {
+        return duration + " hours";
+    }
+
     public void setDuration(long duration) {
         this.duration = duration;
     }
@@ -115,7 +119,7 @@ public class WorkingHour {
 
     public String getFormattedDate() {
         @SuppressLint("SimpleDateFormat")
-        final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm\nyyyy-MM-dd");
         return dateFormat.format(new Date(getStarting()));
     }
 }

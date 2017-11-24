@@ -16,6 +16,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.hw.szoftarch.worklogger.R;
@@ -33,8 +34,9 @@ public class WorkingHourAddFragment extends DialogFragment {
     private List<IssueSpinnerItem> mIssueNames = new ArrayList<>();
 
     private AppCompatEditText durationEditText;
-    private DatePicker datePicker;
     private AppCompatSpinner issueSpinner;
+    private DatePicker datePicker;
+    private TimePicker timePicker;
 
     private AddCallback listener;
 
@@ -73,12 +75,14 @@ public class WorkingHourAddFragment extends DialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View root = inflater.inflate(R.layout.fragment_working_hour, container, false);
         durationEditText = root.findViewById(R.id.duration);
-        datePicker = root.findViewById(R.id.date);
         issueSpinner = root.findViewById(R.id.issue);
-
         final ArrayAdapter<IssueSpinnerItem> arrayAdapter = new ArrayAdapter<>(getActivity(), R.layout.issue_spinner_item, mIssueNames);
         issueSpinner.setAdapter(arrayAdapter);
         issueSpinner.setSelection(0);
+
+        datePicker = root.findViewById(R.id.date);
+        timePicker = root.findViewById(R.id.time);
+        timePicker.setIs24HourView(true);
 
         final Button btnAdd = root.findViewById(R.id.btn_ok);
         btnAdd.setOnClickListener(new View.OnClickListener() {
@@ -91,7 +95,7 @@ public class WorkingHourAddFragment extends DialogFragment {
 
                 final long duration = Long.parseLong(durationEditText.getText().toString().trim());
                 final Issue issue = ((IssueSpinnerItem) issueSpinner.getSelectedItem()).getIssue();
-                final Date date = Utils.getDateFromDatePicker(datePicker);
+                final Date date = Utils.getDateFromPickers(datePicker, timePicker);
 
                 if (listener != null) {
                     listener.onWorkingHourAdded(duration, issue, date);
