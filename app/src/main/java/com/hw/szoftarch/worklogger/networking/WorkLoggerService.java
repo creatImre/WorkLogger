@@ -1,5 +1,6 @@
 package com.hw.szoftarch.worklogger.networking;
 
+import com.hw.szoftarch.worklogger.entities.Issue;
 import com.hw.szoftarch.worklogger.entities.Project;
 import com.hw.szoftarch.worklogger.entities.User;
 import com.hw.szoftarch.worklogger.entities.WorkingHour;
@@ -8,8 +9,8 @@ import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
-import retrofit2.http.HTTP;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
@@ -31,10 +32,12 @@ public interface WorkLoggerService {
     @PUT("hour/")
     Call<String> updateWorkingHour(@Body WorkingHour workingHour);
 
-    @HTTP(method = "DELETE", path = "hour/", hasBody = true)
-    Call<String> removeWorkingHour(@Body WorkingHour workingHour);
+    @DELETE("hour/{id}")
+    Call<String> removeWorkingHour(@Path("id") long id);
 
     @GET("hour/")
     Call<List<WorkingHour>> getWorkingHoursByUser();
 
+    @GET("hour/issues/")
+    Call<List<Issue>> getIssues();
 }

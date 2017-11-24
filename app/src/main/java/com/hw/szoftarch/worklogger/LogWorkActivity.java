@@ -43,8 +43,10 @@ import com.hw.szoftarch.worklogger.networking.RetrofitClient;
 import com.hw.szoftarch.worklogger.networking.WorkLoggerService;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Random;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -63,6 +65,7 @@ public class LogWorkActivity extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private LogWorkAdapter mAdapter;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    private @NonNull List<Issue> mRetrievedIssues = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,6 +151,7 @@ public class LogWorkActivity extends AppCompatActivity
             }
         });
         loadUser();
+        loadIssues();
         loadWorkingHours();
     }
 
@@ -240,6 +244,7 @@ public class LogWorkActivity extends AppCompatActivity
             mSwipeRefreshLayout.setRefreshing(false);
             return;
         }
+        loadIssues();
         loadWorkingHours();
     }
 
@@ -291,7 +296,7 @@ public class LogWorkActivity extends AppCompatActivity
         final WorkingHour workingHourToDelete = (WorkingHour) mAdapter.getItem(positionToDelete);
 
         final WorkLoggerService service = new RetrofitClient().createService();
-        final Call<String> call = service.removeWorkingHour(workingHourToDelete);
+        final Call<String> call = service.removeWorkingHour(workingHourToDelete.getId());
         call.enqueue(new Callback<String>() {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
@@ -299,7 +304,7 @@ public class LogWorkActivity extends AppCompatActivity
                     Log.d(LOG_TAG, "removeWorkingHour was successful");
                     mAdapter.remove(positionToDelete);
                 } else {
-                    Log.d(LOG_TAG, "removeWorkingHour was unsuccessful, but not failed");
+                    Log.d(LOG_TAG, "removeWorkingHour was unsuccessful: " + response.message());
                     Toast.makeText(LogWorkActivity.this, "Cannot delete on server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -329,7 +334,7 @@ public class LogWorkActivity extends AppCompatActivity
                         WorkLoggerApplication.setCurrentUser(responseUser);
                     }
                 } else {
-                    Log.d(LOG_TAG, "login was unsuccessful, but not failed");
+                    Log.d(LOG_TAG, "login was unsuccessful: " + response.message());
                     Toast.makeText(LogWorkActivity.this, "Cannot get current user data from server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -354,7 +359,7 @@ public class LogWorkActivity extends AppCompatActivity
                     Log.d(LOG_TAG, "getWorkingHoursByUser was successful");
                     mAdapter.setWorkingHours(response.body());
                 } else {
-                    Log.d(LOG_TAG, "getWorkingHoursByUser was unsuccessful, but not failed");
+                    Log.d(LOG_TAG, "getWorkingHoursByUser was unsuccessful: " + response.message());
                     Toast.makeText(LogWorkActivity.this, "Cannot update data. Please try again.", Toast.LENGTH_SHORT).show();
                 }
                 mSwipeRefreshLayout.setRefreshing(false);
@@ -363,6 +368,39 @@ public class LogWorkActivity extends AppCompatActivity
             public void onFailure(@NonNull Call<List<WorkingHour>> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "getWorkingHoursByUser failed: " + t.getMessage());
                 Toast.makeText(LogWorkActivity.this, "Cannot update data. Please try again.", Toast.LENGTH_SHORT).show();
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
+    }
+
+    private void loadIssues() {
+        if (!checkOnline()) {
+            return;
+        }
+        final WorkLoggerService service = new RetrofitClient().createService();
+        final Call<List<Issue>> call = service.getIssues();
+        call.enqueue(new Callback<List<Issue>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<Issue>> call, @NonNull Response<List<Issue>> response) {
+                if (response.isSuccessful()) {
+                    Log.d(LOG_TAG, "getIssues was successful");
+                    List<Issue> returnedIssues = response.body();
+                    if (returnedIssues == null) {
+                        Log.d(LOG_TAG, "getIssues is null, not updating local list");
+                    } else {
+                        Log.d(LOG_TAG, "getIssues is not null, updating local list");
+                        mRetrievedIssues = returnedIssues;
+                    }
+                } else {
+                    Log.d(LOG_TAG, "getIssues was unsuccessful: " + response.message());
+                    Toast.makeText(LogWorkActivity.this, "Cannot load issues data. Please try again.", Toast.LENGTH_SHORT).show();
+                }
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+            @Override
+            public void onFailure(@NonNull Call<List<Issue>> call, @NonNull Throwable t) {
+                Log.d(LOG_TAG, "getIssues failed: " + t.getMessage());
+                Toast.makeText(LogWorkActivity.this, "Cannot load issues data. Please try again.", Toast.LENGTH_SHORT).show();
                 mSwipeRefreshLayout.setRefreshing(false);
             }
         });
@@ -391,7 +429,7 @@ public class LogWorkActivity extends AppCompatActivity
         if (!checkUser()) {
             return;
         }
-        final WorkingHour workingHourToAdd = createDummyWorkingHour();
+        final WorkingHour workingHourToAdd = createDummyWorkingHourFromRetrievedIssues();
         Log.d(LOG_TAG, "sending to server: " + workingHourToAdd);
 
         final WorkLoggerService service = new RetrofitClient().createService();
@@ -404,7 +442,7 @@ public class LogWorkActivity extends AppCompatActivity
                     Log.d(LOG_TAG, "returned WorkingHour: " + response.body());
                     mAdapter.add(response.body());
                 } else {
-                    Log.d(LOG_TAG, "addWorkingHour was unsuccessful, but not failed");
+                    Log.d(LOG_TAG, "addWorkingHour was unsuccessful: " + response.message());
                     Toast.makeText(LogWorkActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -433,6 +471,23 @@ public class LogWorkActivity extends AppCompatActivity
         workingHourToAdd.setDuration(10L);
         workingHourToAdd.setStarting(Calendar.getInstance().getTime().getTime());
         workingHourToAdd.setIssue(issue);
+        workingHourToAdd.setUser(WorkLoggerApplication.getCurrentUser());
+        return workingHourToAdd;
+    }
+
+    @NonNull
+    private WorkingHour createDummyWorkingHourFromRetrievedIssues() {
+        if (mRetrievedIssues.isEmpty()) {
+            Log.d(LOG_TAG, "retrieved issues list is empty. Returning a WorkingHour with locally created issue");
+            return createDummyWorkingHour();
+        }
+        Random random = new Random();
+        int index = random.nextInt(mRetrievedIssues.size());
+
+        final WorkingHour workingHourToAdd = new WorkingHour();
+        workingHourToAdd.setDuration(10L);
+        workingHourToAdd.setStarting(Calendar.getInstance().getTime().getTime());
+        workingHourToAdd.setIssue(mRetrievedIssues.get(index));
         workingHourToAdd.setUser(WorkLoggerApplication.getCurrentUser());
         return workingHourToAdd;
     }
