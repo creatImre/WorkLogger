@@ -11,7 +11,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (WorkLoggerApplication.userLoggedIn()) {
-            Log.d(LogWorkActivity.class.getName(), "User already logged in. Name: " + WorkLoggerApplication.getUser().getDisplayName());
+            Log.d(LogWorkActivity.class.getName(), "User already logged in. Name: " + WorkLoggerApplication.getGoogleSignInAccount().getDisplayName());
 
             final Intent intent = new Intent(this, LogWorkActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

@@ -10,7 +10,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -40,8 +39,6 @@ public class SignInActivity extends AppCompatActivity implements
     private GoogleApiClient mGoogleApiClient;
     private TextView mStatusTextView;
     private ProgressDialog mProgressDialog;
-    private User mCurrentUser = null;
-    private GoogleSignInResult mGoogleSignedInResult = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,7 +109,6 @@ public class SignInActivity extends AppCompatActivity implements
     private void handleSignInResult(GoogleSignInResult result) {
         Log.d(TAG, "handleSignInResult:" + result.isSuccess());
         if (result.isSuccess()) {
-            mGoogleSignedInResult = result;
             GoogleSignInAccount account = result.getSignInAccount();
             assert account != null;
             mStatusTextView.setText(getString(R.string.signed_in_fmt, account.getDisplayName()));
@@ -153,13 +149,9 @@ public class SignInActivity extends AppCompatActivity implements
 
     private void updateUI(boolean signedIn) {
         if (signedIn) {
-            if (mCurrentUser != null) {
-                finish();
-                Intent intent = new Intent(this, LogWorkActivity.class);
-                startActivity(intent);
-            } else {
-                Toast.makeText(this, "Cannot connect to the server. Please try again.", Toast.LENGTH_SHORT).show();
-            }
+            finish();
+            Intent intent = new Intent(this, LogWorkActivity.class);
+            startActivity(intent);
         } else {
             mStatusTextView.setText(R.string.signed_out);
         }
@@ -169,11 +161,7 @@ public class SignInActivity extends AppCompatActivity implements
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.sign_in_button:
-                if (mGoogleSignedInResult != null) {
-                    new GoogleSignInTask(mGoogleSignedInResult).execute((Void) null);
-                } else {
-                    signIn();
-                }
+                signIn();
                 break;
         }
     }
@@ -209,7 +197,7 @@ public class SignInActivity extends AppCompatActivity implements
                 Log.d(SignInActivity.class.getName(), "user is null");
                 return result;
             }
-            mCurrentUser = user;
+            WorkLoggerApplication.setCurrentUser(user);
             return result;
         }
 

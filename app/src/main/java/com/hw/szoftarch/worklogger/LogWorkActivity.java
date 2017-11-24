@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -62,7 +61,6 @@ public class LogWorkActivity extends AppCompatActivity
 
     private boolean doubleBackToExitPressedOnce = false;
     private GoogleApiClient mGoogleApiClient;
-    @Nullable private User mCurrentUser = null;
     private LogWorkAdapter mAdapter;
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
@@ -98,7 +96,7 @@ public class LogWorkActivity extends AppCompatActivity
         TextView navName = headerView.findViewById(R.id.nav_profile_name);
         TextView navEmail = headerView.findViewById(R.id.nav_profile_email);
 
-        final GoogleSignInAccount account = WorkLoggerApplication.getUser();
+        final GoogleSignInAccount account = WorkLoggerApplication.getGoogleSignInAccount();
         assert account != null;
         navName.setText(account.getDisplayName());
         navEmail.setText(account.getEmail());
@@ -149,6 +147,91 @@ public class LogWorkActivity extends AppCompatActivity
                 return true;
             }
         });
+        loadUser();
+        loadWorkingHours();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onBackPressed() {
+        final DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            if (doubleBackToExitPressedOnce) {
+                super.onBackPressed();
+            } else {
+                doubleBackToExitPressedOnce = true;
+                Toast.makeText(this, "Press BACK again to exit", Toast.LENGTH_SHORT).show();
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        doubleBackToExitPressedOnce = false;
+                    }
+                }, 2000);
+            }
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(@NonNull final Menu menu) {
+        getMenuInflater().inflate(R.menu.log_work, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
+        final int id = item.getItemId();
+        if (id == R.id.menu_refresh) {
+            Log.d(LOG_TAG, "Refresh menu item selected");
+            mSwipeRefreshLayout.setRefreshing(true);
+            updateData();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(@NonNull final MenuItem item) {
+        // Handle navigation view item clicks here.
+        final int id = item.getItemId();
+
+        if (id == R.id.nav_sign_out) {
+            signOut();
+        } else if (id == R.id.nav_list) {
+
+        } else if (id == R.id.nav_stopwatch) {
+
+        } else if (id == R.id.nav_reports) {
+
+        }
+
+        final DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    private void signOut() {
+        try {
+            Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+                    new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(@NonNull Status status) {
+                            Log.d(LOG_TAG, "signOut status: " + status.getStatus());
+                            finish();
+                            final Intent intent = new Intent(LogWorkActivity.this, SignInActivity.class);
+                            startActivity(intent);
+                        }
+                    });
+        } catch(Exception e) {
+            Log.e(LOG_TAG, "Cannot sign out: " + e.getMessage());
+        }
     }
 
     private void updateData() {
@@ -170,7 +253,7 @@ public class LogWorkActivity extends AppCompatActivity
     }
 
     private boolean checkUser() {
-        if (mCurrentUser != null) {
+        if (WorkLoggerApplication.currentUserExists()) {
             return true;
         }
         Toast.makeText(this, "User data cannot be retrieved. Please try again.", Toast.LENGTH_SHORT).show();
@@ -217,11 +300,13 @@ public class LogWorkActivity extends AppCompatActivity
                     mAdapter.remove(positionToDelete);
                 } else {
                     Log.d(LOG_TAG, "removeWorkingHour was unsuccessful, but not failed");
+                    Toast.makeText(LogWorkActivity.this, "Cannot delete on server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "removeWorkingHour failed: " + t.getMessage());
+                Toast.makeText(LogWorkActivity.this, "Cannot delete on server. Please try again.", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -241,15 +326,17 @@ public class LogWorkActivity extends AppCompatActivity
                     if (responseUser == null) {
                         Log.d(LOG_TAG, "login was successful, but null user returned");
                     } else {
-                        mCurrentUser = responseUser;
+                        WorkLoggerApplication.setCurrentUser(responseUser);
                     }
                 } else {
                     Log.d(LOG_TAG, "login was unsuccessful, but not failed");
+                    Toast.makeText(LogWorkActivity.this, "Cannot get current user data from server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
             public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "login failed: " + t.getMessage());
+                Toast.makeText(LogWorkActivity.this, "Cannot get current user data from server. Please try again.", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -268,23 +355,17 @@ public class LogWorkActivity extends AppCompatActivity
                     mAdapter.setWorkingHours(response.body());
                 } else {
                     Log.d(LOG_TAG, "getWorkingHoursByUser was unsuccessful, but not failed");
+                    Toast.makeText(LogWorkActivity.this, "Cannot update data. Please try again.", Toast.LENGTH_SHORT).show();
                 }
                 mSwipeRefreshLayout.setRefreshing(false);
             }
             @Override
             public void onFailure(@NonNull Call<List<WorkingHour>> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "getWorkingHoursByUser failed: " + t.getMessage());
+                Toast.makeText(LogWorkActivity.this, "Cannot update data. Please try again.", Toast.LENGTH_SHORT).show();
                 mSwipeRefreshLayout.setRefreshing(false);
             }
         });
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
-        loadUser();
-        loadWorkingHours();
     }
 
     @Override
@@ -311,22 +392,26 @@ public class LogWorkActivity extends AppCompatActivity
             return;
         }
         final WorkingHour workingHourToAdd = createDummyWorkingHour();
+        Log.d(LOG_TAG, "sending to server: " + workingHourToAdd);
 
         final WorkLoggerService service = new RetrofitClient().createService();
-        final Call<String> call = service.addWorkingHour(workingHourToAdd);
-        call.enqueue(new Callback<String>() {
+        final Call<WorkingHour> call = service.addWorkingHour(workingHourToAdd);
+        call.enqueue(new Callback<WorkingHour>() {
             @Override
-            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+            public void onResponse(@NonNull Call<WorkingHour> call, @NonNull Response<WorkingHour> response) {
                 if (response.isSuccessful()) {
                     Log.d(LOG_TAG, "addWorkingHour was successful");
-                    mAdapter.add(workingHourToAdd);
+                    Log.d(LOG_TAG, "returned WorkingHour: " + response.body());
+                    mAdapter.add(response.body());
                 } else {
                     Log.d(LOG_TAG, "addWorkingHour was unsuccessful, but not failed");
+                    Toast.makeText(LogWorkActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
-            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<WorkingHour> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "addWorkingHour failed: " + t.getMessage());
+                Toast.makeText(LogWorkActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -339,7 +424,7 @@ public class LogWorkActivity extends AppCompatActivity
         project.setId(1);
 
         final Issue issue = new Issue();
-        issue.setDescription("issue1");
+        issue.setName("issue1");
         issue.setDescription("descr1");
         issue.setId(1);
         issue.setProject(project);
@@ -348,7 +433,7 @@ public class LogWorkActivity extends AppCompatActivity
         workingHourToAdd.setDuration(10L);
         workingHourToAdd.setStarting(Calendar.getInstance().getTime().getTime());
         workingHourToAdd.setIssue(issue);
-        workingHourToAdd.setUser(mCurrentUser);
+        workingHourToAdd.setUser(WorkLoggerApplication.getCurrentUser());
         return workingHourToAdd;
     }
 
@@ -374,80 +459,4 @@ public class LogWorkActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        final DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            if (doubleBackToExitPressedOnce) {
-                super.onBackPressed();
-            } else {
-                doubleBackToExitPressedOnce = true;
-                Toast.makeText(this, "Press BACK again to exit", Toast.LENGTH_SHORT).show();
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        doubleBackToExitPressedOnce = false;
-                    }
-                }, 2000);
-            }
-        }
-    }
-
-    private void signOut() {
-        try {
-            Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                    new ResultCallback<Status>() {
-                        @Override
-                        public void onResult(@NonNull Status status) {
-                            Log.d(LOG_TAG, "signOut status: " + status.getStatus());
-                            finish();
-                            final Intent intent = new Intent(LogWorkActivity.this, SignInActivity.class);
-                            startActivity(intent);
-                        }
-                    });
-        } catch(Exception e) {
-            Log.e(LOG_TAG, "Cannot sign out: " + e.getMessage());
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(@NonNull final Menu menu) {
-        getMenuInflater().inflate(R.menu.log_work, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
-        final int id = item.getItemId();
-        if (id == R.id.menu_refresh) {
-            Log.d(LOG_TAG, "Refresh menu item selected");
-            mSwipeRefreshLayout.setRefreshing(true);
-            updateData();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(@NonNull final MenuItem item) {
-        // Handle navigation view item clicks here.
-        final int id = item.getItemId();
-
-        if (id == R.id.nav_sign_out) {
-            signOut();
-        } else if (id == R.id.nav_list) {
-
-        } else if (id == R.id.nav_stopwatch) {
-
-        } else if (id == R.id.nav_reports) {
-
-        }
-
-        final DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
 }

@@ -26,7 +26,7 @@ public interface WorkLoggerService {
     Call<Project> getReportByProjectName(@Path("projectName") String projectName);
 
     @POST("hour/")
-    Call<String> addWorkingHour(@Body WorkingHour workingHour);
+    Call<WorkingHour> addWorkingHour(@Body WorkingHour workingHour);
 
     @PUT("hour/")
     Call<String> updateWorkingHour(@Body WorkingHour workingHour);

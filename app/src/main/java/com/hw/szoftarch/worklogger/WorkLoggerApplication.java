@@ -11,6 +11,9 @@ import android.support.annotation.Nullable;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.hw.szoftarch.worklogger.entities.User;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 
 public class WorkLoggerApplication extends Application {
@@ -20,9 +23,10 @@ public class WorkLoggerApplication extends Application {
     public static String SERVICE_NAME_KEY = "serviceName";
 
     private static WorkLoggerApplication mInstance;
+    private @Nullable User mCurrentUser = null;
 
     @Nullable
-    public static GoogleSignInAccount getUser() {
+    public static GoogleSignInAccount getGoogleSignInAccount() {
         return GoogleSignIn.getLastSignedInAccount(getContext());
     }
 
@@ -75,7 +79,7 @@ public class WorkLoggerApplication extends Application {
         return mInstance.isOnline();
     }
 
-    public boolean isOnline(){
+    private boolean isOnline(){
         final ConnectivityManager manager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         if (manager == null) {
             return false;
@@ -84,4 +88,16 @@ public class WorkLoggerApplication extends Application {
         return networkInfo != null && networkInfo.isConnected();
     }
 
+    public static void setCurrentUser(@NonNull User user) {
+        mInstance.mCurrentUser = checkNotNull(user, "user cannot be null");
+    }
+
+    @Nullable
+    public static User getCurrentUser() {
+        return mInstance.mCurrentUser;
+    }
+
+    public static boolean currentUserExists() {
+        return mInstance.mCurrentUser != null;
+    }
 }
