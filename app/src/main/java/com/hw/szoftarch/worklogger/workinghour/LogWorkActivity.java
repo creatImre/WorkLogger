@@ -1,4 +1,4 @@
-package com.hw.szoftarch.worklogger;
+package com.hw.szoftarch.worklogger.workinghour;
 
 import android.app.ActivityManager;
 import android.content.Context;
@@ -35,6 +35,10 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.hw.szoftarch.worklogger.CircleTransform;
+import com.hw.szoftarch.worklogger.R;
+import com.hw.szoftarch.worklogger.SignInActivity;
+import com.hw.szoftarch.worklogger.WorkLoggerApplication;
 import com.hw.szoftarch.worklogger.entities.Issue;
 import com.hw.szoftarch.worklogger.entities.Project;
 import com.hw.szoftarch.worklogger.entities.User;

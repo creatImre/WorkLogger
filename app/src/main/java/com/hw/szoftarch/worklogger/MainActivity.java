@@ -5,6 +5,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.hw.szoftarch.worklogger.workinghour.LogWorkActivity;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override

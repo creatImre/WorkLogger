@@ -1,4 +1,4 @@
-package com.hw.szoftarch.worklogger;
+package com.hw.szoftarch.worklogger.workinghour;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import com.hw.szoftarch.worklogger.R;
 import com.hw.szoftarch.worklogger.entities.WorkingHour;
 
 import java.util.ArrayList;

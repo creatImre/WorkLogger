@@ -24,6 +24,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.hw.szoftarch.worklogger.entities.User;
 import com.hw.szoftarch.worklogger.networking.RetrofitClient;
 import com.hw.szoftarch.worklogger.networking.WorkLoggerService;
+import com.hw.szoftarch.worklogger.workinghour.LogWorkActivity;
 
 import java.io.IOException;
 
