@@ -58,7 +58,7 @@
                     android:layout_height="wrap_content"
                     android:layout_column="0"
                     android:layout_gravity="end"
-                    android:text="Duration (hours):"/>
+                    android:text="@string/fragment_label_duration"/>
 
                 <android.support.v7.widget.AppCompatEditText
                     android:id="@+id/duration"
@@ -74,7 +74,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
-                    android:text="Issue:"/>
+                    android:layout_marginTop="8dp"
+                    android:text="@string/fragment_label_issue"/>
 
                 <android.support.v7.widget.AppCompatSpinner
                     android:id="@+id/issue"

@@ -68,4 +68,6 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="fragment_label_issue">Issue:</string>
+    <string name="fragment_label_duration">Duration (hours):</string>
 </resources>
