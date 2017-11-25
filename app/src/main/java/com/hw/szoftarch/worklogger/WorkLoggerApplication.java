@@ -11,7 +11,6 @@ import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -45,6 +44,7 @@ import static com.google.common.base.Preconditions.*;
 public class WorkLoggerApplication extends Application {
 
     private static final String TAG = "WorkLoggerApplication";
+    private static final String PROFILE_PICTURE_NAME = "profilePicture";
 
     public static String SECURITY_KEY = "security";
     public static String PORT_KEY = "port";
@@ -163,6 +163,18 @@ public class WorkLoggerApplication extends Application {
 
     }
 
+    public static void setReportMenuVisibleIfProjectLeaderOrAdmin(final NavigationView navigationView ) {
+        final Menu navigationDrawerMenu = navigationView.getMenu();
+        if (mInstance.mCurrentUser == null) {
+            return;
+        }
+        if (mInstance.mCurrentUser.getUserLevel() != UserLevel.ADMIN && mInstance.mCurrentUser.getUserLevel() != UserLevel.PROJECT_LEADER) {
+            return;
+        }
+        navigationDrawerMenu.findItem(R.id.nav_reports).setVisible(true);
+
+    }
+
     @Nullable
     public static User getCurrentUser() {
         return mInstance.mCurrentUser;
@@ -172,16 +184,18 @@ public class WorkLoggerApplication extends Application {
         return mInstance.mCurrentUser != null;
     }
 
-    public static File getUserProfilePicture() {
-        final String path = "user/image";
-        return new File(Environment.getDataDirectory().getPath() + "/" + path);
-    }
-
     public static void deleteUserProfilePicture() {
-        final boolean deleted = getUserProfilePicture().delete();
-        if (!deleted) {
-            Log.e(WorkLoggerApplication.class.getName(), "Cannot delete existing user picture.");
+        final boolean exists = getContext().getFileStreamPath(PROFILE_PICTURE_NAME).exists();
+        if (!exists) {
+            Log.d(TAG, "Not deleting profile picture, not exists.");
+            return;
         }
+        final boolean deleted = getContext().deleteFile(PROFILE_PICTURE_NAME);
+        if (!deleted) {
+            Log.d(TAG, "Cannot delete existing user picture.");
+            return;
+        }
+        Log.d(TAG, "Successfully deleted profile picture.");
     }
 
     public static void saveUserProfilePicture(final Activity activity, final Uri pictureUrl) {
@@ -196,25 +210,12 @@ public class WorkLoggerApplication extends Application {
 
                     @Override
                     public void run() {
-                        final File file = WorkLoggerApplication.getUserProfilePicture();
                         try {
-                            final boolean exists = file.exists();
-                            if (exists) {
-                                final boolean deleted = file.delete();
-                                if (!deleted) {
-                                    Log.e(TAG, "Cannot delete existing user picture.");
-                                    return;
-                                }
-                            }
-                            final boolean created = file.createNewFile();
-                            if (!created) {
-                                Log.e(TAG, "Cannot crete file for user picture.");
-                                return;
-                            }
-                            final FileOutputStream outputStream = new FileOutputStream(file);
+                            final FileOutputStream outputStream = getContext().openFileOutput(PROFILE_PICTURE_NAME, MODE_PRIVATE);
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream);
                             outputStream.flush();
                             outputStream.close();
+                            Log.d(TAG, "Successfully saved profile picture to file " + getContext().getFileStreamPath(PROFILE_PICTURE_NAME));
                         } catch (IOException e) {
                             Log.e("IOException", e.getLocalizedMessage());
                         }
@@ -247,13 +248,18 @@ public class WorkLoggerApplication extends Application {
         navName.setText(account.getDisplayName());
         navEmail.setText(account.getEmail());
 
-        if (getUserProfilePicture().exists()) {
+        final File file = getContext().getFileStreamPath(PROFILE_PICTURE_NAME);
+        if (file.exists()) {
             Picasso.with(activity)
-                    .load(getUserProfilePicture())
+                    .load(file).transform(new CircleTransform())
+                    .placeholder(android.R.drawable.sym_def_app_icon)
+                    .error(android.R.drawable.sym_def_app_icon)
                     .into(navPicture);
+            Log.d(TAG, "Successfully loaded profile picture from file.");
             return;
         }
 
+        Log.d(TAG, "Not loaded profile picture from file. Loading it from internet...");
         loadProfilePictureTo(activity, account.getPhotoUrl(), null, navPicture);
         saveUserProfilePicture(activity, account.getPhotoUrl());
     }

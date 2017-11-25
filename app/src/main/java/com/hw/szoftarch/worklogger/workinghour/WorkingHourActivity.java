@@ -42,6 +42,7 @@ import com.hw.szoftarch.worklogger.recycler_tools.ClickListener;
 import com.hw.szoftarch.worklogger.recycler_tools.DeleteCallback;
 import com.hw.szoftarch.worklogger.recycler_tools.RecyclerTouchListener;
 import com.hw.szoftarch.worklogger.recycler_tools.SwipeTouchHelperCallback;
+import com.hw.szoftarch.worklogger.report.ReportActivity;
 import com.hw.szoftarch.worklogger.stopper.StopperActivity;
 
 import java.util.ArrayList;
@@ -91,6 +92,7 @@ public class WorkingHourActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         WorkLoggerApplication.setAdminMenuVisibleIfAdmin(navigationView);
         WorkLoggerApplication.setGoogleAccountDataToNavigationDrawer(this);
+        WorkLoggerApplication.setReportMenuVisibleIfProjectLeaderOrAdmin(navigationView);
 
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
@@ -217,7 +219,9 @@ public class WorkingHourActivity extends AppCompatActivity
             finish();
             startActivity(intent);
         } else if (id == R.id.nav_reports) {
-
+            final Intent intent = new Intent(this, ReportActivity.class);
+            finish();
+            startActivity(intent);
         } else if (id == R.id.nav_users) {
 
         } else if (id == R.id.nav_config) {

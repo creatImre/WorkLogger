@@ -30,6 +30,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.hw.szoftarch.worklogger.R;
 import com.hw.szoftarch.worklogger.WorkLoggerApplication;
+import com.hw.szoftarch.worklogger.report.ReportActivity;
 import com.hw.szoftarch.worklogger.stopper.StopperActivity;
 import com.hw.szoftarch.worklogger.workinghour.WorkingHourActivity;
 
@@ -65,6 +66,7 @@ public class ConfigActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         WorkLoggerApplication.setAdminMenuVisibleIfAdmin(navigationView);
         WorkLoggerApplication.setGoogleAccountDataToNavigationDrawer(this);
+        WorkLoggerApplication.setReportMenuVisibleIfProjectLeaderOrAdmin(navigationView);
 
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
@@ -276,8 +278,12 @@ public class ConfigActivity extends AppCompatActivity
             final Intent intent = new Intent(this, StopperActivity.class);
             finish();
             startActivity(intent);
-        } else if (id == R.id.nav_reports) {
+        } else if (id == R.id.nav_users) {
 
+        } else if (id == R.id.nav_reports) {
+            final Intent intent = new Intent(this, ReportActivity.class);
+            finish();
+            startActivity(intent);
         }
 
         final DrawerLayout drawer = findViewById(R.id.drawer_layout);

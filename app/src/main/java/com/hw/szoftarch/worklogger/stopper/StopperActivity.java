@@ -40,6 +40,7 @@ import com.hw.szoftarch.worklogger.entities.Issue;
 import com.hw.szoftarch.worklogger.entities.WorkingHour;
 import com.hw.szoftarch.worklogger.networking.RetrofitClient;
 import com.hw.szoftarch.worklogger.networking.WorkLoggerService;
+import com.hw.szoftarch.worklogger.report.ReportActivity;
 import com.hw.szoftarch.worklogger.workinghour.IssueSpinnerItem;
 import com.hw.szoftarch.worklogger.workinghour.WorkingHourActivity;
 
@@ -117,7 +118,7 @@ public class StopperActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         WorkLoggerApplication.setAdminMenuVisibleIfAdmin(navigationView);
         WorkLoggerApplication.setGoogleAccountDataToNavigationDrawer(this);
-
+        WorkLoggerApplication.setReportMenuVisibleIfProjectLeaderOrAdmin(navigationView);
 
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
@@ -252,6 +253,10 @@ public class StopperActivity extends AppCompatActivity
             finish();
             startActivity(intent);
         } else if (id == R.id.nav_reports) {
+            final Intent intent = new Intent(this, ReportActivity.class);
+            finish();
+            startActivity(intent);
+        } else if (id == R.id.nav_users) {
 
         } else if (id == R.id.nav_config) {
             final Intent intent = new Intent(this, ConfigActivity.class);
