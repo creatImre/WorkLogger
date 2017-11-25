@@ -2,6 +2,7 @@ package com.hw.szoftarch.worklogger.networking;
 
 import com.hw.szoftarch.worklogger.entities.Issue;
 import com.hw.szoftarch.worklogger.entities.Project;
+import com.hw.szoftarch.worklogger.entities.Report;
 import com.hw.szoftarch.worklogger.entities.User;
 import com.hw.szoftarch.worklogger.entities.WorkingHour;
 
@@ -23,8 +24,17 @@ public interface WorkLoggerService {
     @PUT("auth/{googleId}")
     Call<String> setUserLevel(@Path("googleId") String googleId, @Body String level);
 
-    @GET("report/{projectName}")
-    Call<Project> getReportByProjectName(@Path("projectName") String projectName);
+    @GET("auth/all/")
+    Call<List<User>> getUsers();
+
+    @GET("report/{reportId}")
+    Call<Project> getReportById(@Path("projectName") long reportId);
+
+    @POST("report/")
+    Call<Report> addReport(@Body Report report);
+
+    @GET("report/all")
+    Call<List<Report>> getReportsByUser();
 
     @POST("hour/")
     Call<WorkingHour> addWorkingHour(@Body WorkingHour workingHour);

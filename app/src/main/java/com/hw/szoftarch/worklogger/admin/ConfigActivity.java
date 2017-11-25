@@ -103,7 +103,7 @@ public class ConfigActivity extends AppCompatActivity
         serviceText.setText(WorkLoggerApplication.getService());
 
         final List<String> securityLevels = WorkLoggerApplication.getSecurityLevels();
-        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this, R.layout.security_spinner_item, securityLevels);
+        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, securityLevels);
         securitySpinner.setAdapter(arrayAdapter);
 
         final String security = WorkLoggerApplication.getSecurity();

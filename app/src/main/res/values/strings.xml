@@ -44,4 +44,8 @@
     <string name="interval">Interval:</string>
     <string name="generate">Generate</string>
     <string name="users">User(s):</string>
+    <string name="start_date">Start date:</string>
+    <string name="select_date">Select date</string>
+    <string name="worked_time">Worked time:</string>
+    <string name="report_start_date">Report start date:</string>
 </resources>

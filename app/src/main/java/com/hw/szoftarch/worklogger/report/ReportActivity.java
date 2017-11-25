@@ -11,11 +11,15 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatSpinner;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
@@ -25,8 +29,12 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.hw.szoftarch.worklogger.R;
 import com.hw.szoftarch.worklogger.WorkLoggerApplication;
 import com.hw.szoftarch.worklogger.admin.ConfigActivity;
+import com.hw.szoftarch.worklogger.entities.ReportType;
 import com.hw.szoftarch.worklogger.stopper.StopperActivity;
 import com.hw.szoftarch.worklogger.workinghour.WorkingHourActivity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ReportActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -34,6 +42,7 @@ public class ReportActivity extends AppCompatActivity
     private static final String LOG_TAG = ReportActivity.class.getName();
     private boolean doubleBackToExitPressedOnce = false;
     private GoogleApiClient mGoogleApiClient;
+    private final List<UserSpinnerItem> mRetrievedUsers = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +87,66 @@ public class ReportActivity extends AppCompatActivity
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
+        initUI();
+        updateUI();
+    }
+
+    private void initUI() {
+        final AppCompatSpinner usersSpinner = findViewById(R.id.users);
+        final AppCompatSpinner typeSpinner = findViewById(R.id.type);
+        final Button startDateButton = findViewById(R.id.btn_start_date);
+        final Button generateButton = findViewById(R.id.btn_generate);
+        final Button saveButton = findViewById(R.id.btn_save);
+
+        final ArrayAdapter<UserSpinnerItem> usersAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, mRetrievedUsers);
+        usersSpinner.setAdapter(usersAdapter);
+
+        final ArrayAdapter<ReportType> typesAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, ReportType.values());
+        typeSpinner.setAdapter(typesAdapter);
+
+        startDateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View view) {
+                selectStartDate();
+            }
+        });
+        generateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View view) {
+                generateReport();
+            }
+        });
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View view) {
+                sendReport();
+            }
+        });
+        final TextView subject = findViewById(R.id.subject);
+        final TextView startDate = findViewById(R.id.startdate);
+        final TextView interval = findViewById(R.id.interval);
+        final TextView workedTime = findViewById(R.id.worked_time);
+
+        subject.setText("");
+        startDate.setText("");
+        interval.setText("");
+        workedTime.setText("");
+    }
+
+    private void selectStartDate() {
+        //TODO
+    }
+
+    private void generateReport() {
+        //TODO
+    }
+
+    private void sendReport() {
+        //TODO
+    }
+
+    private void updateUI() {
+        //TODO
     }
 
     @Override

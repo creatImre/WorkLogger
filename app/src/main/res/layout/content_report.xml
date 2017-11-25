@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center_horizontal"
-    android:layout_margin="20dp"
+    android:layout_margin="10dp"
     android:columnCount="2"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.hw.szoftarch.worklogger.report.ReportActivity"
@@ -25,6 +25,26 @@
         android:id="@+id/users"
         android:layout_gravity="center_horizontal"
         android:textSize="18sp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="10dp"
+        android:padding="6dp"
+        android:text="@string/start_date"
+        android:textSize="18sp"
+        android:textStyle="bold"/>
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/btn_start_date"
+        style="@style/Base.Widget.AppCompat.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:text="@string/select_date"/>
+
 
     <TextView
         android:layout_width="wrap_content"
@@ -60,19 +80,92 @@
         android:layout_marginTop="10dp"
         android:text="@string/save"/>
 
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swiperefresh"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_columnSpan="2"
-        android:layout_marginTop="10dp">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="50dp"
+        android:padding="10dp"
+        android:text="Report subject:"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@android:id/list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scrollbars="vertical"/>
+    <TextView
+        android:id="@+id/subject"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="50dp"
+        android:padding="10dp"
+        android:text="Imre Torma"
+        android:textColor="@color/colorAccent"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
 
-    </android.support.v4.widget.SwipeRefreshLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:text="@string/report_start_date"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/startdate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:text="2017.10.05"
+        android:textColor="@color/colorAccent"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:text="@string/interval"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/interval"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:text="Day"
+        android:textColor="@color/colorAccent"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:text="@string/worked_time"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/worked_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:text="8 hours, 30 minutes"
+        android:textColor="@color/colorAccent"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
 
 </GridLayout>
