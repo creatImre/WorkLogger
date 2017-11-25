@@ -35,6 +35,14 @@ public class Utils {
         return calendar.getTime();
     }
 
+    public static DateTime getDateFromDatePicker(final @NonNull DatePicker datePicker) {
+        final int day = datePicker.getDayOfMonth();
+        final int month = datePicker.getMonth();
+        final int year = datePicker.getYear();
+
+        return new DateTime(year, month, day,0,0);
+    }
+
     public static void updatePickers(final @NonNull DatePicker datePicker, final @NonNull TimePicker timePicker, final @NonNull Date date) {
         final Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
@@ -85,5 +93,12 @@ public class Utils {
     public static long getMinutesRemainder(final long seconds) {
         final long hours = TimeUnit.SECONDS.toHours(seconds);
         return TimeUnit.SECONDS.toMinutes(seconds) -  TimeUnit.HOURS.toMinutes(hours);
+    }
+
+    public static String getDateText(final DateTime date) {
+        final int year = date.getYear();
+        final int month = date.getMonthOfYear();
+        final int day = date.getDayOfMonth();
+        return String.format(Locale.getDefault(), "%04d.%02d.%02d", year, month, day);
     }
 }

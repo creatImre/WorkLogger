@@ -1,6 +1,8 @@
 package com.hw.szoftarch.worklogger.entities;
 
 public class Report {
+    public static final String ALL = "allUser";
+
     private long id;
     private User owner;
     private String googleId;

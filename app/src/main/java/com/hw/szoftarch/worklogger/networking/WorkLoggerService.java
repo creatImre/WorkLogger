@@ -36,6 +36,9 @@ public interface WorkLoggerService {
     @GET("report/all")
     Call<List<Report>> getReportsByUser();
 
+    @GET("report/sum/{reportId}")
+    Call<Long> getWorkedHoursForReport(@Path("reportId") long id);
+
     @POST("hour/")
     Call<WorkingHour> addWorkingHour(@Body WorkingHour workingHour);
 
