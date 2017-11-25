@@ -26,8 +26,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -52,6 +50,7 @@ import com.hw.szoftarch.worklogger.recycler_tools.ClickListener;
 import com.hw.szoftarch.worklogger.recycler_tools.DeleteCallback;
 import com.hw.szoftarch.worklogger.recycler_tools.RecyclerTouchListener;
 import com.hw.szoftarch.worklogger.recycler_tools.SwipeTouchHelperCallback;
+import com.hw.szoftarch.worklogger.stopper.StopperActivity;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -63,20 +62,16 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class WorkingHourActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener, WorkingHourAddFragment.AddCallback, WorkingHourEditFragment.EditCallback, DeleteCallback {
+        implements NavigationView.OnNavigationItemSelectedListener, WorkingHourAddFragment.AddCallback, WorkingHourEditFragment.EditCallback, DeleteCallback {
 
     private static final String LOG_TAG = WorkingHourActivity.class.getName();
 
-    private Boolean isFabOpen = false;
-    private FloatingActionButton fab, fabManual, fabStopwatch;
-    private Animation fab_open, fab_close, rotate_forward, rotate_backward;
-
     private boolean doubleBackToExitPressedOnce = false;
     private GoogleApiClient mGoogleApiClient;
-    //private LogWorkAdapter mAdapter;
     private WorkingHourAdapter mAdapter;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private @NonNull List<Issue> mRetrievedIssues = new ArrayList<>();
+    @NonNull
+    private List<Issue> mRetrievedIssues = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,17 +80,15 @@ public class WorkingHourActivity extends AppCompatActivity
         final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        fab = findViewById(R.id.fab);
-        fabManual = findViewById(R.id.fab_manual);
-        fabStopwatch = findViewById(R.id.fab_stopwatch);
-        fab.setOnClickListener(this);
-        fabManual.setOnClickListener(this);
-        fabStopwatch.setOnClickListener(this);
-
-        fab_open = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_open);
-        fab_close = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_close);
-        rotate_forward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_forward);
-        rotate_backward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_backward);
+        final FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final WorkingHourAddFragment addFragment = new WorkingHourAddFragment();
+                addFragment.putIssues(mRetrievedIssues);
+                addFragment.show(getFragmentManager(), WorkingHourAddFragment.TAG);
+            }
+        });
 
         final DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -105,26 +98,7 @@ public class WorkingHourActivity extends AppCompatActivity
 
         final NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        View headerView =  navigationView.getHeaderView(0);
-        ImageView navPicture = headerView.findViewById(R.id.nav_profile_picture);
-        TextView navName = headerView.findViewById(R.id.nav_profile_name);
-        TextView navEmail = headerView.findViewById(R.id.nav_profile_email);
-
-        final GoogleSignInAccount account = WorkLoggerApplication.getGoogleSignInAccount();
-        assert account != null;
-        navName.setText(account.getDisplayName());
-        navEmail.setText(account.getEmail());
-        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        int iconSize = 64;
-        if (am != null) {
-            iconSize = am.getLauncherLargeIconSize();
-        }
-        Picasso.with(this)
-                .load(account.getPhotoUrl()).transform(new CircleTransform())
-                .resize(iconSize, iconSize)
-                .placeholder(android.R.drawable.sym_def_app_icon)
-                .error(android.R.drawable.sym_def_app_icon) //TODO default image for offline
-                .into(navPicture);
+        setGoogleAccountDataToNavigationDrawer();
 
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
@@ -155,6 +129,30 @@ public class WorkingHourActivity extends AppCompatActivity
         loadUser();
         loadIssues();
         loadWorkingHours();
+    }
+
+    private void setGoogleAccountDataToNavigationDrawer() {
+        final NavigationView navigationView = findViewById(R.id.nav_view);
+        View headerView = navigationView.getHeaderView(0);
+        ImageView navPicture = headerView.findViewById(R.id.nav_profile_picture);
+        TextView navName = headerView.findViewById(R.id.nav_profile_name);
+        TextView navEmail = headerView.findViewById(R.id.nav_profile_email);
+
+        final GoogleSignInAccount account = WorkLoggerApplication.getGoogleSignInAccount();
+        assert account != null;
+        navName.setText(account.getDisplayName());
+        navEmail.setText(account.getEmail());
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        int iconSize = 64;
+        if (am != null) {
+            iconSize = am.getLauncherLargeIconSize();
+        }
+        Picasso.with(this)
+                .load(account.getPhotoUrl()).transform(new CircleTransform())
+                .resize(iconSize, iconSize)
+                .placeholder(android.R.drawable.sym_def_app_icon)
+                .error(android.R.drawable.sym_def_app_icon) //TODO default image for offline
+                .into(navPicture);
     }
 
     private void initList() {
@@ -242,15 +240,14 @@ public class WorkingHourActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull final MenuItem item) {
-        // Handle navigation view item clicks here.
         final int id = item.getItemId();
 
         if (id == R.id.nav_sign_out) {
             signOut();
-        } else if (id == R.id.nav_list) {
-
         } else if (id == R.id.nav_stopwatch) {
-
+            final Intent intent = new Intent(this, StopperActivity.class);
+            finish();
+            startActivity(intent);
         } else if (id == R.id.nav_reports) {
 
         }
@@ -272,17 +269,17 @@ public class WorkingHourActivity extends AppCompatActivity
                             startActivity(intent);
                         }
                     });
-        } catch(Exception e) {
+        } catch (Exception e) {
             Log.e(LOG_TAG, "Cannot sign out: " + e.getMessage());
         }
     }
 
     private void updateData() {
-        //TODO
         if (!checkOnline()) {
             mSwipeRefreshLayout.setRefreshing(false);
             return;
         }
+        loadUser();
         loadIssues();
         loadWorkingHours();
     }
@@ -310,7 +307,7 @@ public class WorkingHourActivity extends AppCompatActivity
             }
         });
 
-        String negativeText = getString(android.R.string.cancel);
+        final String negativeText = getString(android.R.string.cancel);
         builder.setNegativeButton(negativeText, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -346,6 +343,7 @@ public class WorkingHourActivity extends AppCompatActivity
                     Toast.makeText(WorkingHourActivity.this, "Cannot delete on server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
+
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
                 mAdapter.notifyItemChanged(positionToDelete);
@@ -377,6 +375,7 @@ public class WorkingHourActivity extends AppCompatActivity
                     Toast.makeText(WorkingHourActivity.this, "Cannot get current user data from server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
+
             @Override
             public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "login failed: " + t.getMessage());
@@ -403,6 +402,7 @@ public class WorkingHourActivity extends AppCompatActivity
                 }
                 mSwipeRefreshLayout.setRefreshing(false);
             }
+
             @Override
             public void onFailure(@NonNull Call<List<WorkingHour>> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "getWorkingHoursByUser failed: " + t.getMessage());
@@ -436,6 +436,7 @@ public class WorkingHourActivity extends AppCompatActivity
                 }
                 mSwipeRefreshLayout.setRefreshing(false);
             }
+
             @Override
             public void onFailure(@NonNull Call<List<Issue>> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "getIssues failed: " + t.getMessage());
@@ -443,27 +444,6 @@ public class WorkingHourActivity extends AppCompatActivity
                 mSwipeRefreshLayout.setRefreshing(false);
             }
         });
-    }
-
-    @Override
-    public void onClick(View v) {
-        final int id = v.getId();
-        switch (id) {
-            case R.id.fab:
-                animateFAB();
-                break;
-            case R.id.fab_manual:
-                if (!checkOnline()) {
-                    return;
-                }
-                final WorkingHourAddFragment addFragment = new WorkingHourAddFragment();
-                addFragment.putIssues(mRetrievedIssues);
-                addFragment.show(getFragmentManager(), WorkingHourAddFragment.TAG);
-                break;
-            case R.id.fab_stopwatch:
-                startStopWatch();
-                break;
-        }
     }
 
     private void addWorkingHour(final WorkingHour workingHourToAdd) {
@@ -486,6 +466,7 @@ public class WorkingHourActivity extends AppCompatActivity
                     Toast.makeText(WorkingHourActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
+
             @Override
             public void onFailure(@NonNull Call<WorkingHour> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "addWorkingHour failed: " + t.getMessage());
@@ -513,34 +494,13 @@ public class WorkingHourActivity extends AppCompatActivity
                     Toast.makeText(WorkingHourActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
+
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "updateWorkingHour failed: " + t.getMessage());
                 Toast.makeText(WorkingHourActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    private void startStopWatch() {
-        Toast.makeText(this, "No function attached yet.", Toast.LENGTH_SHORT).show();
-    }
-
-    public void animateFAB() {
-        if (isFabOpen) {
-            fab.startAnimation(rotate_backward);
-            fabManual.startAnimation(fab_close);
-            fabStopwatch.startAnimation(fab_close);
-            fabManual.setClickable(false);
-            fabStopwatch.setClickable(false);
-            isFabOpen = false;
-        } else {
-            fab.startAnimation(rotate_forward);
-            fabManual.startAnimation(fab_open);
-            fabStopwatch.startAnimation(fab_open);
-            fabManual.setClickable(true);
-            fabStopwatch.setClickable(true);
-            isFabOpen = true;
-        }
     }
 
     @Override

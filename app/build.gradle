@@ -38,4 +38,5 @@ dependencies {
     implementation 'com.squareup.picasso:picasso:2.5.2'
     implementation 'com.squareup.retrofit2:retrofit:2.3.0'
     implementation 'com.google.guava:guava:23.5-android'
+    implementation 'joda-time:joda-time:2.9.9'
 }

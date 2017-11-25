@@ -5,6 +5,9 @@ import android.support.annotation.NonNull;
 import android.widget.DatePicker;
 import android.widget.TimePicker;
 
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
+
 import java.util.Calendar;
 import java.util.Date;
 
@@ -50,4 +53,16 @@ public class Utils {
         }
     }
 
+    public static long getElapsedTimeUntilNow(final long fromTime) {
+        return getElapsedTimeBetween(fromTime, new DateTime().getMillis());
+    }
+
+    public static long getElapsedTimeBetween(final long fromTime, final long toTime) {
+        final DateTime startDateTime = new DateTime(fromTime);
+        final DateTime nowDateTime = new DateTime(toTime);
+
+        final Duration duration = new Duration(startDateTime, nowDateTime);
+        //TODO when using minutes, use this: final long elapsedMinutes = duration.getStandardMinutes();
+        return duration.getStandardMinutes();
+    }
 }

@@ -10,5 +10,6 @@
     <color name="colorPrimaryDark">#388E3C</color>
     <color name="colorAccent">#F44336</color>
     <color name="colorFAB1">#2196F3</color>
-    <color name="colorFAB2">#FF9100</color>
+    <color name="colorFAB2">#4CAF50</color>
+    <color name="colorFAB3">#FF9100</color>
 </resources>
