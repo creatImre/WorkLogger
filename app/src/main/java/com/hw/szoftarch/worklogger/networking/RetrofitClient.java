@@ -59,7 +59,7 @@ public class RetrofitClient {
         retrofit = new Retrofit.Builder()
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
-                .baseUrl(WorkLoggerApplication.getServiceUrl())
+                .baseUrl(WorkLoggerApplication.getFullServiceUrl())
                 .client(client)
                 .build();
     }

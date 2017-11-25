@@ -1,7 +1,5 @@
 package com.hw.szoftarch.worklogger.workinghour;
 
-import android.app.ActivityManager;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -26,21 +24,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.hw.szoftarch.worklogger.CircleTransform;
 import com.hw.szoftarch.worklogger.R;
-import com.hw.szoftarch.worklogger.SignInActivity;
 import com.hw.szoftarch.worklogger.WorkLoggerApplication;
+import com.hw.szoftarch.worklogger.admin.ConfigActivity;
 import com.hw.szoftarch.worklogger.entities.Issue;
 import com.hw.szoftarch.worklogger.entities.User;
 import com.hw.szoftarch.worklogger.entities.WorkingHour;
@@ -51,7 +43,6 @@ import com.hw.szoftarch.worklogger.recycler_tools.DeleteCallback;
 import com.hw.szoftarch.worklogger.recycler_tools.RecyclerTouchListener;
 import com.hw.szoftarch.worklogger.recycler_tools.SwipeTouchHelperCallback;
 import com.hw.szoftarch.worklogger.stopper.StopperActivity;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -98,7 +89,8 @@ public class WorkingHourActivity extends AppCompatActivity
 
         final NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        setGoogleAccountDataToNavigationDrawer();
+        WorkLoggerApplication.setAdminMenuVisibleIfAdmin(navigationView);
+        WorkLoggerApplication.setGoogleAccountDataToNavigationDrawer(this);
 
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
@@ -129,30 +121,6 @@ public class WorkingHourActivity extends AppCompatActivity
         loadUser();
         loadIssues();
         loadWorkingHours();
-    }
-
-    private void setGoogleAccountDataToNavigationDrawer() {
-        final NavigationView navigationView = findViewById(R.id.nav_view);
-        View headerView = navigationView.getHeaderView(0);
-        ImageView navPicture = headerView.findViewById(R.id.nav_profile_picture);
-        TextView navName = headerView.findViewById(R.id.nav_profile_name);
-        TextView navEmail = headerView.findViewById(R.id.nav_profile_email);
-
-        final GoogleSignInAccount account = WorkLoggerApplication.getGoogleSignInAccount();
-        assert account != null;
-        navName.setText(account.getDisplayName());
-        navEmail.setText(account.getEmail());
-        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        int iconSize = 64;
-        if (am != null) {
-            iconSize = am.getLauncherLargeIconSize();
-        }
-        Picasso.with(this)
-                .load(account.getPhotoUrl()).transform(new CircleTransform())
-                .resize(iconSize, iconSize)
-                .placeholder(android.R.drawable.sym_def_app_icon)
-                .error(android.R.drawable.sym_def_app_icon) //TODO default image for offline
-                .into(navPicture);
     }
 
     private void initList() {
@@ -243,35 +211,24 @@ public class WorkingHourActivity extends AppCompatActivity
         final int id = item.getItemId();
 
         if (id == R.id.nav_sign_out) {
-            signOut();
+            WorkLoggerApplication.signOutFromGoogle(mGoogleApiClient, this);
         } else if (id == R.id.nav_stopwatch) {
             final Intent intent = new Intent(this, StopperActivity.class);
             finish();
             startActivity(intent);
         } else if (id == R.id.nav_reports) {
 
+        } else if (id == R.id.nav_users) {
+
+        } else if (id == R.id.nav_config) {
+            final Intent intent = new Intent(this, ConfigActivity.class);
+            finish();
+            startActivity(intent);
         }
 
         final DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-    private void signOut() {
-        try {
-            Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                    new ResultCallback<Status>() {
-                        @Override
-                        public void onResult(@NonNull Status status) {
-                            Log.d(LOG_TAG, "signOut status: " + status.getStatus());
-                            finish();
-                            final Intent intent = new Intent(WorkingHourActivity.this, SignInActivity.class);
-                            startActivity(intent);
-                        }
-                    });
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Cannot sign out: " + e.getMessage());
-        }
     }
 
     private void updateData() {
@@ -369,6 +326,8 @@ public class WorkingHourActivity extends AppCompatActivity
                         Log.d(LOG_TAG, "login was successful, but null user returned");
                     } else {
                         WorkLoggerApplication.setCurrentUser(responseUser);
+                        final NavigationView navigationView = findViewById(R.id.nav_view);
+                        WorkLoggerApplication.setAdminMenuVisibleIfAdmin(navigationView);
                     }
                 } else {
                     Log.d(LOG_TAG, "login was unsuccessful: " + response.message());

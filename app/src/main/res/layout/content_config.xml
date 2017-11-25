@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.hw.szoftarch.worklogger.admin.ConfigActivity"
+    tools:showIn="@layout/app_bar_config"
+    android:columnCount="2"
+    android:layout_gravity="center_horizontal"
+    android:layout_margin="20dp">
+
+    <TextView
+        android:id="@+id/full_url"
+        android:layout_marginTop="20dp"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:padding="6dp"
+        android:layout_columnSpan="2"
+        android:text="@string/example_full_url"/>
+
+    <android.support.v7.widget.AppCompatTextView
+        android:layout_marginTop="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:layout_gravity="end"
+        android:padding="6dp"
+        android:textStyle="bold"
+        android:text="HTTP/HTTPS:"/>
+
+    <android.support.v7.widget.AppCompatSpinner
+        android:layout_marginTop="20dp"
+        android:id="@+id/http_https"
+        android:layout_gravity="center_horizontal"
+        android:textSize="18sp"/>
+
+    <TextView
+        android:layout_marginTop="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:layout_gravity="end"
+        android:padding="6dp"
+        android:textStyle="bold"
+        android:text="IP address:"/>
+
+    <android.support.v7.widget.AppCompatEditText
+        android:id="@+id/ip_address"
+        android:layout_marginTop="20dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:textSize="18sp"
+        android:ems="10"
+        android:imeOptions="actionNext"
+        android:inputType="number"
+        android:digits="0123456789."
+        android:selectAllOnFocus="true"/>
+
+    <TextView
+        android:layout_marginTop="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:layout_gravity="end"
+        android:padding="6dp"
+        android:textStyle="bold"
+        android:text="Port:"/>
+
+    <android.support.v7.widget.AppCompatEditText
+        android:id="@+id/port"
+        android:layout_marginTop="20dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:textSize="18sp"
+        android:ems="5"
+        android:imeOptions="actionNext"
+        android:inputType="number"
+        android:maxLength="6"
+        android:selectAllOnFocus="true"/>
+
+    <TextView
+        android:layout_marginTop="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:layout_gravity="end"
+        android:padding="6dp"
+        android:textStyle="bold"
+        android:text="Service path:"/>
+
+    <android.support.v7.widget.AppCompatEditText
+        android:id="@+id/service"
+        android:layout_marginTop="20dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:textSize="18sp"
+        android:ems="10"
+        android:imeOptions="actionDone"
+        android:inputType="textNoSuggestions"
+        android:selectAllOnFocus="true"/>
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/btn_discard"
+        android:layout_marginTop="20dp"
+        style="@style/Base.Widget.AppCompat.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Discard"/>
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/btn_save"
+        android:layout_marginTop="20dp"
+        style="@style/Base.Widget.AppCompat.Button.Borderless.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Save"/>
+
+</GridLayout>

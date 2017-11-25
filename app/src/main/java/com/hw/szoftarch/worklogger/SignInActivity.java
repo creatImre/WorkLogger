@@ -113,8 +113,10 @@ public class SignInActivity extends AppCompatActivity implements
             GoogleSignInAccount account = result.getSignInAccount();
             assert account != null;
             mStatusTextView.setText(getString(R.string.signed_in_fmt, account.getDisplayName()));
+            WorkLoggerApplication.saveUserProfilePicture(this, account.getPhotoUrl());
             updateUI(true);
         } else {
+            WorkLoggerApplication.deleteUserProfilePicture();
             updateUI(false);
         }
     }

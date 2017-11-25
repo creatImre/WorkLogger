@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
 
     <application
         android:name=".WorkLoggerApplication"
@@ -35,6 +37,11 @@
         <activity
             android:name=".stopper.StopperActivity"
             android:label="@string/title_activity_stopper"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".admin.ConfigActivity"
+            android:label="@string/title_activity_config"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
     </application>
