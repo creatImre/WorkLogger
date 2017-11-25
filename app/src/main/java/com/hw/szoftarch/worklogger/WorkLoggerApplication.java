@@ -52,8 +52,6 @@ public class WorkLoggerApplication extends Application {
     public static String SERVICE_NAME_KEY = "serviceName";
     private static SharedPreferences mPreferences;
 
-
-
     private static WorkLoggerApplication mInstance;
     private @Nullable User mCurrentUser = null;
 

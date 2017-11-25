@@ -90,8 +90,8 @@ public class WorkingHourActivity extends AppCompatActivity
 
         final NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        WorkLoggerApplication.setAdminMenuVisibleIfAdmin(navigationView);
         WorkLoggerApplication.setGoogleAccountDataToNavigationDrawer(this);
+        WorkLoggerApplication.setAdminMenuVisibleIfAdmin(navigationView);
         WorkLoggerApplication.setReportMenuVisibleIfProjectLeaderOrAdmin(navigationView);
 
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -332,6 +332,7 @@ public class WorkingHourActivity extends AppCompatActivity
                         WorkLoggerApplication.setCurrentUser(responseUser);
                         final NavigationView navigationView = findViewById(R.id.nav_view);
                         WorkLoggerApplication.setAdminMenuVisibleIfAdmin(navigationView);
+                        WorkLoggerApplication.setReportMenuVisibleIfProjectLeaderOrAdmin(navigationView);
                     }
                 } else {
                     Log.d(LOG_TAG, "login was unsuccessful: " + response.message());

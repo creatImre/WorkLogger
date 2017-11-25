@@ -31,7 +31,7 @@
         android:layout_gravity="end"
         android:padding="6dp"
         android:textStyle="bold"
-        android:text="HTTP/HTTPS:"/>
+        android:text="@string/security_level"/>
 
     <android.support.v7.widget.AppCompatSpinner
         android:layout_marginTop="20dp"
@@ -47,7 +47,7 @@
         android:layout_gravity="end"
         android:padding="6dp"
         android:textStyle="bold"
-        android:text="IP address:"/>
+        android:text="@string/ip_address"/>
 
     <android.support.v7.widget.AppCompatEditText
         android:id="@+id/ip_address"
@@ -69,7 +69,7 @@
         android:layout_gravity="end"
         android:padding="6dp"
         android:textStyle="bold"
-        android:text="Port:"/>
+        android:text="@string/port"/>
 
     <android.support.v7.widget.AppCompatEditText
         android:id="@+id/port"
@@ -91,7 +91,7 @@
         android:layout_gravity="end"
         android:padding="6dp"
         android:textStyle="bold"
-        android:text="Service path:"/>
+        android:text="@string/service_path"/>
 
     <android.support.v7.widget.AppCompatEditText
         android:id="@+id/service"
@@ -111,7 +111,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="Discard"/>
+        android:text="@string/discard"/>
 
     <android.support.v7.widget.AppCompatButton
         android:id="@+id/btn_save"
@@ -120,6 +120,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="Save"/>
+        android:text="@string/save"/>
 
 </GridLayout>

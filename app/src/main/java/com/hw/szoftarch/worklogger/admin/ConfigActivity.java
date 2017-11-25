@@ -64,8 +64,8 @@ public class ConfigActivity extends AppCompatActivity
 
         final NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        WorkLoggerApplication.setAdminMenuVisibleIfAdmin(navigationView);
         WorkLoggerApplication.setGoogleAccountDataToNavigationDrawer(this);
+        WorkLoggerApplication.setAdminMenuVisibleIfAdmin(navigationView);
         WorkLoggerApplication.setReportMenuVisibleIfProjectLeaderOrAdmin(navigationView);
 
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
