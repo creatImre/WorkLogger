@@ -76,8 +76,8 @@ public class StopperActivity extends AppCompatActivity
     private Animation fab_open, fab_close, rotate_forward, rotate_backward;
 
     private GoogleApiClient mGoogleApiClient;
-    private @NonNull
-    List<IssueSpinnerItem> mRetrievedIssues;
+    @NonNull
+    private List<IssueSpinnerItem> mRetrievedIssues = new ArrayList<>();
     private Issue mSelectedIssue;
 
     private Handler mHandler = new Handler();
@@ -87,7 +87,6 @@ public class StopperActivity extends AppCompatActivity
             mHandler.postDelayed(mUpdateClockTask, 1000);
         }
     };
-
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -141,7 +140,6 @@ public class StopperActivity extends AppCompatActivity
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
-        mRetrievedIssues = new ArrayList<>();
         final IssueSpinnerItem emptyItem = new IssueSpinnerItem(null);
         mRetrievedIssues.add(emptyItem);
         final AppCompatSpinner issueSpinner = findViewById(R.id.issue_spinner);
