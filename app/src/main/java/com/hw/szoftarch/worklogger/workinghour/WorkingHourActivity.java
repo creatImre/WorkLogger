@@ -167,10 +167,6 @@ public class WorkingHourActivity extends AppCompatActivity
                 new ClickListener() {
                     @Override
                     public void onClick(View view, int position) {
-                    }
-
-                    @Override
-                    public void onLongClick(View view, int position) {
                         if (!checkOnline()) {
                             return;
                         }
@@ -178,6 +174,10 @@ public class WorkingHourActivity extends AppCompatActivity
                         editFragment.putIssues(mRetrievedIssues);
                         editFragment.putWorkingHour(mAdapter.getItem(position));
                         editFragment.show(getFragmentManager(), WorkingHourEditFragment.TAG);
+                    }
+
+                    @Override
+                    public void onLongClick(View view, int position) {
                     }
                 }));
 

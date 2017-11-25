@@ -10,6 +10,8 @@ import org.joda.time.Duration;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class Utils {
 
@@ -57,12 +59,31 @@ public class Utils {
         return getElapsedTimeBetween(fromTime, new DateTime().getMillis());
     }
 
-    public static long getElapsedTimeBetween(final long fromTime, final long toTime) {
+    private static long getElapsedTimeBetween(final long fromTime, final long toTime) {
         final DateTime startDateTime = new DateTime(fromTime);
         final DateTime nowDateTime = new DateTime(toTime);
 
         final Duration duration = new Duration(startDateTime, nowDateTime);
-        //TODO when using minutes, use this: final long elapsedMinutes = duration.getStandardMinutes();
-        return duration.getStandardMinutes();
+        return duration.getStandardSeconds();
+    }
+
+    public static String getShowedElapsedTime(final long elapsedSeconds) {
+        final long hours = TimeUnit.SECONDS.toHours(elapsedSeconds);
+        final long minutes = TimeUnit.SECONDS.toMinutes(elapsedSeconds) -  TimeUnit.HOURS.toMinutes(hours);
+        final long seconds = elapsedSeconds - TimeUnit.MINUTES.toSeconds(minutes) -  TimeUnit.HOURS.toSeconds(hours);
+        return String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
+    public static long getSeconds(final int hours, final int minutes, final int seconds) {
+        return seconds + minutes * 60 + hours * 3600;
+    }
+
+    public static long getHoursRemainder(final long seconds) {
+        return TimeUnit.SECONDS.toHours(seconds);
+    }
+
+    public static long getMinutesRemainder(final long seconds) {
+        final long hours = TimeUnit.SECONDS.toHours(seconds);
+        return TimeUnit.SECONDS.toMinutes(seconds) -  TimeUnit.HOURS.toMinutes(hours);
     }
 }

@@ -58,14 +58,31 @@
                     android:layout_height="wrap_content"
                     android:layout_column="0"
                     android:layout_gravity="end"
-                    android:text="@string/fragment_label_duration"/>
+                    android:text="@string/fragment_label_duration_hours"/>
 
                 <android.support.v7.widget.AppCompatEditText
-                    android:id="@+id/duration"
+                    android:id="@+id/duration_hours"
                     android:layout_height="wrap_content"
                     android:layout_column="1"
                     android:layout_gravity="start"
-                    android:ems="6"
+                    android:ems="4"
+                    android:imeOptions="actionNext"
+                    android:inputType="number"
+                    android:selectAllOnFocus="true"/>
+
+                <android.support.v7.widget.AppCompatTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_column="0"
+                    android:layout_gravity="end"
+                    android:text="@string/fragment_label_duration_minutes"/>
+
+                <android.support.v7.widget.AppCompatEditText
+                    android:id="@+id/duration_minutes"
+                    android:layout_height="wrap_content"
+                    android:layout_column="1"
+                    android:layout_gravity="start"
+                    android:ems="4"
                     android:imeOptions="actionDone"
                     android:inputType="number"
                     android:selectAllOnFocus="true"/>

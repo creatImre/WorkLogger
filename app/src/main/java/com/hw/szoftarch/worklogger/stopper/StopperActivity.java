@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -25,6 +26,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -78,12 +80,23 @@ public class StopperActivity extends AppCompatActivity
     List<IssueSpinnerItem> mRetrievedIssues;
     private Issue mSelectedIssue;
 
+    private Handler mHandler = new Handler();
+    private Runnable mUpdateClockTask = new Runnable() {
+        public void run() {
+            updateUI();
+            mHandler.postDelayed(mUpdateClockTask, 100);
+        }
+    };
+
+
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stopper);
         final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(StopperActivity.this);
 
         fab = findViewById(R.id.fab);
         fabStart = findViewById(R.id.fab_start);
@@ -128,10 +141,6 @@ public class StopperActivity extends AppCompatActivity
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
-        mPreferences = PreferenceManager.getDefaultSharedPreferences(StopperActivity.this);
-
-        loadIssues();
-
         mRetrievedIssues = new ArrayList<>();
         final IssueSpinnerItem emptyItem = new IssueSpinnerItem(null);
         mRetrievedIssues.add(emptyItem);
@@ -149,6 +158,15 @@ public class StopperActivity extends AppCompatActivity
             public void onNothingSelected(final AdapterView<?> adapterView) {
             }
         });
+
+        final Button refreshIssuesButton = findViewById(R.id.btn_refresh_issues);
+        refreshIssuesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View view) {
+                loadIssues();
+            }
+        });
+
         updateUI();
     }
 
@@ -198,6 +216,7 @@ public class StopperActivity extends AppCompatActivity
                         for (final Issue issue : returnedIssues) {
                             mRetrievedIssues.add(new IssueSpinnerItem(issue));
                         }
+                        Toast.makeText(StopperActivity.this, "Refreshed issues list.", Toast.LENGTH_SHORT).show();
                     }
                 } else {
                     Log.d(LOG_TAG, "getIssues was unsuccessful: " + response.message());
@@ -217,6 +236,19 @@ public class StopperActivity extends AppCompatActivity
     protected void onStart() {
         super.onStart();
         mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mHandler.removeCallbacks(mUpdateClockTask);
+        mHandler.postDelayed(mUpdateClockTask, 100);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mHandler.removeCallbacks(mUpdateClockTask);
     }
 
     private void signOut() {
@@ -279,6 +311,7 @@ public class StopperActivity extends AppCompatActivity
                     Log.d(LOG_TAG, "addWorkingHour was successful, clearing preferences...");
                     Toast.makeText(StopperActivity.this, "Time successfully saved.", Toast.LENGTH_SHORT).show();
                     clearPreferences();
+                    updateUI(0L);
                 } else {
                     Log.d(LOG_TAG, "addWorkingHour was unsuccessful: " + response.message());
                     Toast.makeText(StopperActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
@@ -407,7 +440,7 @@ public class StopperActivity extends AppCompatActivity
     }
 
     private void saveDuration(final long elapsedTime) {
-        mPreferences.edit().putLong(START_TIME_KEY, elapsedTime).apply();
+        mPreferences.edit().putLong(DURATION_KEY, elapsedTime).apply();
         mPreferences.edit().putBoolean(STOPPED_KEY, true).apply();
     }
 
@@ -462,13 +495,7 @@ public class StopperActivity extends AppCompatActivity
 
     private void updateUI(final long elapsedTime) {
         final TextView elapsedTimeTextView = findViewById(R.id.elapsed_time);
-        final String elapsedText;
-        if (elapsedTime > 1L) {
-            elapsedText = String.format("%s hours", elapsedTime);
-        } else {
-            elapsedText = String.format("%s hour", elapsedTime);
-        }
-        elapsedTimeTextView.setText(elapsedText);
+        elapsedTimeTextView.setText(Utils.getShowedElapsedTime(elapsedTime));
 
         final TextView startedTimeTextView = findViewById(R.id.is_started);
         final boolean isStopped = mPreferences.getBoolean(STOPPED_KEY, false);

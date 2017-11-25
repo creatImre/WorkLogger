@@ -18,7 +18,8 @@
     <string name="empty_user">Empty User</string>
     <string name="example_gmail_com">example@gmail.com</string>
     <string name="fragment_label_issue">Issue:</string>
-    <string name="fragment_label_duration">Duration (hours):</string>
+    <string name="fragment_label_duration_hours">Duration (hours):</string>
+    <string name="fragment_label_duration_minutes">Duration (minutes):</string>
     <string name="title_activity_stopper">StopperActivity</string>
 
     <string name="action_settings">Settings</string>
@@ -28,4 +29,5 @@
     <string name="measuring_stopped">Measuring stopped.</string>
     <string name="measuring_not_exists">Measuring not exists.</string>
     <string name="select_issue_before_sending">Select an issue before sending:</string>
+    <string name="refresh_issues">Refresh issues</string>
 </resources>

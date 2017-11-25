@@ -33,7 +33,8 @@ public class WorkingHourAddFragment extends DialogFragment {
     public static final String TAG = "WorkingHourAdd";
     private List<IssueSpinnerItem> mIssueNames = new ArrayList<>();
 
-    private AppCompatEditText durationEditText;
+    private AppCompatEditText durationHourEditText;
+    private AppCompatEditText durationMinuteEditText;
     private AppCompatSpinner issueSpinner;
     private DatePicker datePicker;
     private TimePicker timePicker;
@@ -74,7 +75,8 @@ public class WorkingHourAddFragment extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View root = inflater.inflate(R.layout.fragment_working_hour, container, false);
-        durationEditText = root.findViewById(R.id.duration);
+        durationHourEditText = root.findViewById(R.id.duration_hours);
+        durationMinuteEditText = root.findViewById(R.id.duration_minutes);
         issueSpinner = root.findViewById(R.id.issue);
         final ArrayAdapter<IssueSpinnerItem> arrayAdapter = new ArrayAdapter<>(getActivity(), R.layout.issue_spinner_item, mIssueNames);
         issueSpinner.setAdapter(arrayAdapter);
@@ -88,12 +90,16 @@ public class WorkingHourAddFragment extends DialogFragment {
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (durationEditText.getText().toString().equals("")) {
-                    Toast.makeText(getActivity(), "Please enter a durationEditText!", Toast.LENGTH_SHORT).show();
+                final String durationHourText = durationHourEditText.getText().toString();
+                final String durationMinuteText = durationMinuteEditText.getText().toString();
+                final int hours = durationHourText.equals("") ? 0 : Integer.parseInt(durationHourText);
+                final int minutes = durationMinuteText.equals("") ? 0 : Integer.parseInt(durationMinuteText);
+                if (hours == 0 && minutes == 0) {
+                    Toast.makeText(getActivity(), "Please enter at least 1 minutes.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                final long duration = Long.parseLong(durationEditText.getText().toString().trim());
+                final long duration = Utils.getSeconds(hours, minutes, 0);
                 final Issue issue = ((IssueSpinnerItem) issueSpinner.getSelectedItem()).getIssue();
                 final Date date = Utils.getDateFromPickers(datePicker, timePicker);
 
@@ -112,7 +118,7 @@ public class WorkingHourAddFragment extends DialogFragment {
             }
         });
 
-        durationEditText.requestFocus();
+        durationHourEditText.requestFocus();
         final InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null) {
             imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);

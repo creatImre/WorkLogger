@@ -3,9 +3,12 @@ package com.hw.szoftarch.worklogger.entities;
 import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 
+import com.hw.szoftarch.worklogger.Utils;
+
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Locale;
 
 public class WorkingHour {
 
@@ -72,7 +75,12 @@ public class WorkingHour {
     }
 
     public String getFormattedDuration() {
-        return duration + " hours";
+        final long hours = Utils.getHoursRemainder(duration);
+        final long minutes = Utils.getMinutesRemainder(duration);
+        if (minutes == 0) {
+            return String.format(Locale.getDefault(), "%d hours", hours);
+        }
+        return String.format(Locale.getDefault(), "%d hours\n%d minutes", hours, minutes);
     }
 
     public void setDuration(long duration) {
