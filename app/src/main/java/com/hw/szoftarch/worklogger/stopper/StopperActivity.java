@@ -84,7 +84,7 @@ public class StopperActivity extends AppCompatActivity
     private Runnable mUpdateClockTask = new Runnable() {
         public void run() {
             updateUI();
-            mHandler.postDelayed(mUpdateClockTask, 100);
+            mHandler.postDelayed(mUpdateClockTask, 1000);
         }
     };
 
