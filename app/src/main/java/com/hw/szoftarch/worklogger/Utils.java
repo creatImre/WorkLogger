@@ -42,7 +42,7 @@ public class Utils {
         final int year = calendar.get(Calendar.YEAR);
         final int month = calendar.get(Calendar.MONTH);
         final int day = calendar.get(Calendar.DATE);
-        final int hour = calendar.get(Calendar.HOUR);
+        final int hour = calendar.get(Calendar.HOUR_OF_DAY);
         final int minute = calendar.get(Calendar.MINUTE);
 
         datePicker.updateDate(year, month, day);
