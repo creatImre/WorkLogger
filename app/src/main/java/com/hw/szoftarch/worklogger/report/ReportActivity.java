@@ -33,6 +33,7 @@ import com.hw.szoftarch.worklogger.R;
 import com.hw.szoftarch.worklogger.Utils;
 import com.hw.szoftarch.worklogger.WorkLoggerApplication;
 import com.hw.szoftarch.worklogger.admin.ConfigActivity;
+import com.hw.szoftarch.worklogger.admin.UserManagementActivity;
 import com.hw.szoftarch.worklogger.entities.Report;
 import com.hw.szoftarch.worklogger.entities.ReportType;
 import com.hw.szoftarch.worklogger.entities.User;
@@ -386,7 +387,6 @@ public class ReportActivity extends AppCompatActivity
         }
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull final MenuItem item) {
         final int id = item.getItemId();
@@ -402,7 +402,9 @@ public class ReportActivity extends AppCompatActivity
             finish();
             startActivity(intent);
         } else if (id == R.id.nav_users) {
-
+            final Intent intent = new Intent(this, UserManagementActivity.class);
+            finish();
+            startActivity(intent);
         } else if (id == R.id.nav_config) {
             final Intent intent = new Intent(this, ConfigActivity.class);
             finish();

@@ -21,8 +21,11 @@ public interface WorkLoggerService {
     @GET("auth/")
     Call<User> login();
 
-    @PUT("auth/{googleId}")
-    Call<String> setUserLevel(@Path("googleId") String googleId, @Body String level);
+    @PUT("auth/")
+    Call<String> updateUser(@Body User user);
+
+    @DELETE("auth/{googleId}")
+    Call<String> removeUser(@Path("googleId") String googleId);
 
     @GET("auth/all/")
     Call<List<User>> getUsers();
@@ -53,4 +56,5 @@ public interface WorkLoggerService {
 
     @GET("hour/issues/")
     Call<List<Issue>> getIssues();
+
 }

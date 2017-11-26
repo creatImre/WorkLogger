@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:padding="10dp"
+    android:columnCount="2">
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/btn_cancel"
+        style="@style/Base.Widget.AppCompat.Button.Borderless.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_gravity="start"
+        android:text="@android:string/cancel"/>
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/btn_ok"
+        style="@style/Base.Widget.AppCompat.Button.Borderless.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_column="1"
+        android:layout_gravity="end"
+        android:text="@android:string/ok"/>
+    <android.support.v7.widget.AppCompatTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_gravity="end"
+        android:text="@string/name"/>
+
+    <android.support.v7.widget.AppCompatEditText
+        android:id="@+id/name"
+        android:layout_height="wrap_content"
+        android:layout_column="1"
+        android:layout_gravity="start"
+        android:ems="8"
+        android:imeOptions="actionNext"
+        android:inputType="textCapWords"
+        android:selectAllOnFocus="true"/>
+
+    <android.support.v7.widget.AppCompatTextView
+        android:layout_marginTop="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_gravity="end"
+        android:text="@string/level"/>
+
+    <android.support.v7.widget.AppCompatSpinner
+        android:id="@+id/level"
+        android:layout_marginTop="20dp"/>
+</GridLayout>

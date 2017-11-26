@@ -48,4 +48,7 @@
     <string name="select_date">Select date</string>
     <string name="worked_time">Worked time:</string>
     <string name="report_start_date">Report start date:</string>
+    <string name="title_activity_user_management">User Management</string>
+    <string name="level">Level:</string>
+    <string name="name">Name:</string>
 </resources>
