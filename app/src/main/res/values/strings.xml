@@ -6,7 +6,7 @@
     <string name="loading">Loading…</string>
     <string name="sign_out">Sign Out</string>
     <string name="desc_google_icon">Google Logo</string>
-    <string name="server_client_id" tools:ignore="TypographyDashes">390153392979-9gaqsfen0f7kdqc3kh07b4uvm2fn8loe.apps.googleusercontent.com</string>
+    <string name="server_client_id">390153392979-9gaqsfen0f7kdqc3kh07b4uvm2fn8loe.apps.googleusercontent.com</string>
     <string name="action_refresh">Refresh</string>
     <string name="title_activity_log_work">Working Hours</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>

@@ -157,7 +157,6 @@ public class WorkLoggerApplication extends Application {
             return;
         }
         navigationDrawerMenu.findItem(R.id.nav_users).setVisible(true);
-        navigationDrawerMenu.findItem(R.id.nav_config).setVisible(true);
 
     }
 

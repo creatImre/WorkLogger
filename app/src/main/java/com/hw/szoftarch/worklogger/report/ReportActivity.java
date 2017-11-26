@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -16,6 +17,8 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
@@ -38,8 +41,10 @@ import com.hw.szoftarch.worklogger.networking.RetrofitClient;
 import com.hw.szoftarch.worklogger.networking.WorkLoggerService;
 import com.hw.szoftarch.worklogger.stopper.StopperActivity;
 import com.hw.szoftarch.worklogger.workinghour.WorkingHourActivity;
+import com.hw.szoftarch.worklogger.workinghour.WorkingHourAddFragment;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -56,10 +61,11 @@ public class ReportActivity extends AppCompatActivity
     private boolean doubleBackToExitPressedOnce = false;
     private GoogleApiClient mGoogleApiClient;
     private final List<UserSpinnerItem> mRetrievedUsers = new ArrayList<>();
-    private DateTime mSelectedStartDate = new DateTime();
+    private LocalDate mSelectedStartDate;
     private Report mGeneratedReport;
     private boolean mCurrentReportSaved = false;
     private long mWorkedHours;
+    private Animation mRotateAnimation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +73,16 @@ public class ReportActivity extends AppCompatActivity
         setContentView(R.layout.activity_report);
         final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mRotateAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_slowly_360);
+        final FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                fab.startAnimation(mRotateAnimation);
+                getAllUsers();
+            }
+        });
 
         final DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -94,9 +110,7 @@ public class ReportActivity extends AppCompatActivity
                 })
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
-
-        final UserSpinnerItem allUserItem = new UserSpinnerItem(null);
-        mRetrievedUsers.add(allUserItem);
+        mSelectedStartDate = new LocalDate();
         initUI();
         getAllUsers();
     }
@@ -145,18 +159,27 @@ public class ReportActivity extends AppCompatActivity
     }
 
     private void selectStartDate(final Button button) {
-        Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DATE);
+        int year;
+        int month;
+        int day;
+        if (mSelectedStartDate != null) {
+            year = mSelectedStartDate.getYear();
+            month = mSelectedStartDate.getMonthOfYear();
+            day = mSelectedStartDate.getDayOfMonth();
+        } else {
+            Calendar calendar = Calendar.getInstance();
+            year = calendar.get(Calendar.YEAR);
+            month = calendar.get(Calendar.MONTH);
+            day = calendar.get(Calendar.DATE);
+        }
         new DatePickerDialog(this, new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker datePicker, int year, int month, int day) {
-                mSelectedStartDate = new DateTime(year, month, day,0,0);
+                mSelectedStartDate = new LocalDate(year, month + 1, day);
                 button.setText(Utils.getDateText(mSelectedStartDate));
             }
         }
-        ,year, month, day).show();
+        ,year, month - 1, day).show();
     }
 
     private void generateReport() {
@@ -164,11 +187,10 @@ public class ReportActivity extends AppCompatActivity
         if (owner == null) {
             Log.d(LOG_TAG, "User is null. Cannot use is to create report.");
             Toast.makeText(this, "Cannot generate report. User data cannot be retrieved. Please try again.", Toast.LENGTH_SHORT).show();
-
         }
         final Report report = new Report();
         report.setOwner(owner);
-        report.setStartDate(mSelectedStartDate.getMillis());
+        report.setStartDate(mSelectedStartDate.toDate().getTime());
 
         final AppCompatSpinner usersSpinner = findViewById(R.id.users);
         final AppCompatSpinner typeSpinner = findViewById(R.id.type);
@@ -176,23 +198,15 @@ public class ReportActivity extends AppCompatActivity
         final User selectedUser = ((UserSpinnerItem) usersSpinner.getSelectedItem()).getUser();
         if (selectedUser == null) {
             report.setGoogleId(Report.ALL);
+        } else {
+            report.setGoogleId(selectedUser.getGoogleId());
         }
         final ReportType type = (ReportType) typeSpinner.getSelectedItem();
         report.setReportType(type.toString());
         mGeneratedReport = report;
         mCurrentReportSaved = false;
-    }
-
-    private void addStopperResult(final WorkingHour stopperWorkingHour) {
-
-    }
-
-    private void updateReport(){
-
-    }
-
-    private void deleteReport() {
-
+        Log.d(LOG_TAG, "Report generated successfully.");
+        Toast.makeText(this, "Report generated. Please save it.", Toast.LENGTH_SHORT).show();
     }
 
     private void sendReport() {
@@ -289,6 +303,10 @@ public class ReportActivity extends AppCompatActivity
                         for (User user : users) {
                             mRetrievedUsers.add(new UserSpinnerItem(user));
                         }
+                        final AppCompatSpinner usersSpinner = findViewById(R.id.users);
+                        final ArrayAdapter<UserSpinnerItem> usersAdapter =
+                                new ArrayAdapter<>(ReportActivity.this, R.layout.spinner_item, mRetrievedUsers);
+                        usersSpinner.setAdapter(usersAdapter);
                     }
                 } else {
                     Log.d(LOG_TAG, "getUsers was unsuccessful: " + response.message());
@@ -327,12 +345,12 @@ public class ReportActivity extends AppCompatActivity
             }
         }
         subject.setText(name);
-        final DateTime dateTime = new DateTime(mGeneratedReport.getStartDate());
+        final LocalDate dateTime = new LocalDate(mGeneratedReport.getStartDate());
         startDate.setText(Utils.getDateText(dateTime));
         final ReportType type = ReportType.valueOf(mGeneratedReport.getReportType());
         final String shownInterval = type.getShownName();
         interval.setText(shownInterval);
-        workedTime.setText(String.valueOf(mWorkedHours));
+        workedTime.setText(Utils.getShowedElapsedTime(mWorkedHours));
     }
 
     @Override

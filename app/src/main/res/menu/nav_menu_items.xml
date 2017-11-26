@@ -20,6 +20,10 @@
             android:icon="@drawable/ic_watch_later_black_24dp"
             android:title="@string/stopwatch"/>
         <item
+            android:id="@+id/nav_config"
+            android:icon="@drawable/ic_watch_later_black_24dp"
+            android:title="@string/configuration"/>
+        <item
             android:id="@+id/nav_reports"
             android:icon="@drawable/ic_receipt_black_24dp"
             android:title="@string/reports"
@@ -28,11 +32,6 @@
             android:id="@+id/nav_users"
             android:icon="@drawable/ic_view_list_black_24dp"
             android:title="@string/user_management"
-            android:visible="false"/>
-        <item
-            android:id="@+id/nav_config"
-            android:icon="@drawable/ic_watch_later_black_24dp"
-            android:title="@string/configuration"
             android:visible="false"/>
     </group>
 </menu>

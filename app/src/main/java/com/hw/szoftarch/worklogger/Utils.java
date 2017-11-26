@@ -2,11 +2,13 @@ package com.hw.szoftarch.worklogger;
 
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.widget.DatePicker;
 import android.widget.TimePicker;
 
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.joda.time.LocalDate;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -95,7 +97,7 @@ public class Utils {
         return TimeUnit.SECONDS.toMinutes(seconds) -  TimeUnit.HOURS.toMinutes(hours);
     }
 
-    public static String getDateText(final DateTime date) {
+    public static String getDateText(final LocalDate date) {
         final int year = date.getYear();
         final int month = date.getMonthOfYear();
         final int day = date.getDayOfMonth();
