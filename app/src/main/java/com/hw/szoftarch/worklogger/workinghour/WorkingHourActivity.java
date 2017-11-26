@@ -128,13 +128,13 @@ public class WorkingHourActivity extends AppCompatActivity
 
     private void initList() {
         mAdapter = new WorkingHourAdapter(this);
-        final RecyclerView foodsRecyclerView = findViewById(android.R.id.list);
+        final RecyclerView recyclerView = findViewById(android.R.id.list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
-        foodsRecyclerView.setLayoutManager(mLayoutManager);
-        foodsRecyclerView.setItemAnimator(new DefaultItemAnimator());
-        foodsRecyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
-        foodsRecyclerView.setAdapter(mAdapter);
-        foodsRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), foodsRecyclerView,
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
+        recyclerView.setAdapter(mAdapter);
+        recyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), recyclerView,
                 new ClickListener() {
                     @Override
                     public void onClick(View view, int position) {
@@ -154,7 +154,7 @@ public class WorkingHourActivity extends AppCompatActivity
 
         ItemTouchHelper.Callback callback = new SwipeTouchHelperCallback(mAdapter);
         ItemTouchHelper mTouchHelper = new ItemTouchHelper(callback);
-        mTouchHelper.attachToRecyclerView(foodsRecyclerView);
+        mTouchHelper.attachToRecyclerView(recyclerView);
     }
 
     @Override

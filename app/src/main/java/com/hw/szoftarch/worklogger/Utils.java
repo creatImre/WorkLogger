@@ -2,7 +2,6 @@ package com.hw.szoftarch.worklogger;
 
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.widget.DatePicker;
 import android.widget.TimePicker;
 
@@ -42,7 +41,7 @@ public class Utils {
         final int month = datePicker.getMonth();
         final int year = datePicker.getYear();
 
-        return new DateTime(year, month, day,0,0);
+        return new DateTime(year, month + 1, day,0,0);
     }
 
     public static void updatePickers(final @NonNull DatePicker datePicker, final @NonNull TimePicker timePicker, final @NonNull Date date) {
@@ -63,6 +62,16 @@ public class Utils {
             timePicker.setCurrentHour(hour);
             timePicker.setCurrentMinute(minute);
         }
+    }
+
+    public static void updateDatePicker(final @NonNull DatePicker datePicker, final long time) {
+        final LocalDate localDate = new LocalDate(time);
+
+        final int year = localDate.getYear();
+        final int month = localDate.getMonthOfYear();
+        final int day = localDate.getDayOfMonth();
+
+        datePicker.updateDate(year, month - 1, day);
     }
 
     public static long getElapsedTimeUntilNow(final long fromTime) {

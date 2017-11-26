@@ -41,7 +41,7 @@
     <string name="port">Port:</string>
     <string name="ip_address">IP address:</string>
     <string name="security_level">Security level:</string>
-    <string name="interval">Interval:</string>
+    <string name="report_type">Report type:</string>
     <string name="generate">Generate</string>
     <string name="users">User(s):</string>
     <string name="start_date">Start date:</string>
@@ -51,4 +51,8 @@
     <string name="title_activity_user_management">User Management</string>
     <string name="level">Level:</string>
     <string name="name">Name:</string>
+    <string name="dummy_interval">Month</string>
+    <string name="dummy_worked_time">20 hours 30 minutes</string>
+    <string name="dummy_start_date">2017.11.15</string>
+    <string name="dummy_subject">Imre Torma</string>
 </resources>

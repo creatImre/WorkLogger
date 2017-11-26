@@ -1,6 +1,6 @@
 package com.hw.szoftarch.worklogger.report;
 
-import android.app.DatePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -9,20 +9,20 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.AppCompatSpinner;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.DatePicker;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
@@ -30,43 +30,42 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.hw.szoftarch.worklogger.R;
-import com.hw.szoftarch.worklogger.Utils;
 import com.hw.szoftarch.worklogger.WorkLoggerApplication;
 import com.hw.szoftarch.worklogger.admin.ConfigActivity;
 import com.hw.szoftarch.worklogger.admin.UserManagementActivity;
 import com.hw.szoftarch.worklogger.entities.Report;
-import com.hw.szoftarch.worklogger.entities.ReportType;
 import com.hw.szoftarch.worklogger.entities.User;
-import com.hw.szoftarch.worklogger.entities.WorkingHour;
 import com.hw.szoftarch.worklogger.networking.RetrofitClient;
 import com.hw.szoftarch.worklogger.networking.WorkLoggerService;
+import com.hw.szoftarch.worklogger.recycler_tools.ClickListener;
+import com.hw.szoftarch.worklogger.recycler_tools.DeleteCallback;
+import com.hw.szoftarch.worklogger.recycler_tools.RecyclerTouchListener;
+import com.hw.szoftarch.worklogger.recycler_tools.SwipeTouchHelperCallback;
 import com.hw.szoftarch.worklogger.stopper.StopperActivity;
 import com.hw.szoftarch.worklogger.workinghour.WorkingHourActivity;
-import com.hw.szoftarch.worklogger.workinghour.WorkingHourAddFragment;
-
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ReportActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener,
+        ReportAddFragment.AddCallback, ReportEditFragment.EditCallback, DeleteCallback {
 
     private static final String LOG_TAG = ReportActivity.class.getName();
     private boolean doubleBackToExitPressedOnce = false;
     private GoogleApiClient mGoogleApiClient;
-    private final List<UserSpinnerItem> mRetrievedUsers = new ArrayList<>();
-    private LocalDate mSelectedStartDate;
-    private Report mGeneratedReport;
-    private boolean mCurrentReportSaved = false;
-    private long mWorkedHours;
-    private Animation mRotateAnimation;
+    private List<User> mRetrievedUsers = new ArrayList<>();
+    @NonNull
+    private Map<String, User> mRetrievedUsersMap = new HashMap<>();
+    private ReportAdapter mAdapter;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private int mRemainingUnrefreshedReports = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,13 +74,13 @@ public class ReportActivity extends AppCompatActivity
         final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mRotateAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_slowly_360);
         final FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                fab.startAnimation(mRotateAnimation);
-                getAllUsers();
+                final ReportAddFragment addFragment = new ReportAddFragment();
+                addFragment.putUsers(mRetrievedUsers);
+                addFragment.show(getFragmentManager(), ReportAddFragment.TAG);
             }
         });
 
@@ -111,128 +110,84 @@ public class ReportActivity extends AppCompatActivity
                 })
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
-        mSelectedStartDate = new LocalDate();
-        initUI();
-        getAllUsers();
+        mSwipeRefreshLayout = findViewById(R.id.swiperefresh);
+        mSwipeRefreshLayout.setOnRefreshListener(
+                new SwipeRefreshLayout.OnRefreshListener() {
+                    @Override
+                    public void onRefresh() {
+                        Log.d(LOG_TAG, "onRefresh called from SwipeRefreshLayout");
+                        updateData();
+                    }
+                }
+        );
+
+        initList();
+        loadUsers();
+        loadReports();
     }
 
-    private void initUI() {
-        final AppCompatSpinner usersSpinner = findViewById(R.id.users);
-        final AppCompatSpinner typeSpinner = findViewById(R.id.type);
-        final Button startDateButton = findViewById(R.id.btn_start_date);
-        final Button generateButton = findViewById(R.id.btn_generate);
-        final Button saveButton = findViewById(R.id.btn_save);
+    private void initList() {
+        mAdapter = new ReportAdapter(this);
+        final RecyclerView recyclerView = findViewById(android.R.id.list);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
+        recyclerView.setAdapter(mAdapter);
+        recyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), recyclerView,
+                new ClickListener() {
+                    @Override
+                    public void onClick(View view, int position) {
+                        if (!checkOnline()) {
+                            return;
+                        }
+                        final ReportEditFragment editFragment = new ReportEditFragment();
+                        editFragment.putUsers(mRetrievedUsers);
+                        editFragment.putReport(mAdapter.getItem(position));
+                        editFragment.show(getFragmentManager(), ReportEditFragment.TAG);
+                    }
 
-        final ArrayAdapter<UserSpinnerItem> usersAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, mRetrievedUsers);
-        usersSpinner.setAdapter(usersAdapter);
+                    @Override
+                    public void onLongClick(View view, int position) {
+                    }
+                }));
 
-        final ArrayAdapter<ReportType> typesAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, ReportType.values());
-        typeSpinner.setAdapter(typesAdapter);
-
-        startDateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View view) {
-                selectStartDate(startDateButton);
-            }
-        });
-        startDateButton.setText(Utils.getDateText(mSelectedStartDate));
-        generateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View view) {
-                generateReport();
-            }
-        });
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View view) {
-                sendReport();
-            }
-        });
-        final TextView subject = findViewById(R.id.subject);
-        final TextView startDate = findViewById(R.id.startdate);
-        final TextView interval = findViewById(R.id.interval);
-        final TextView workedTime = findViewById(R.id.worked_time);
-
-        subject.setText("");
-        startDate.setText("");
-        interval.setText("");
-        workedTime.setText("");
+        ItemTouchHelper.Callback callback = new SwipeTouchHelperCallback(mAdapter);
+        ItemTouchHelper mTouchHelper = new ItemTouchHelper(callback);
+        mTouchHelper.attachToRecyclerView(recyclerView);
     }
 
-    private void selectStartDate(final Button button) {
-        int year;
-        int month;
-        int day;
-        if (mSelectedStartDate != null) {
-            year = mSelectedStartDate.getYear();
-            month = mSelectedStartDate.getMonthOfYear();
-            day = mSelectedStartDate.getDayOfMonth();
-        } else {
-            Calendar calendar = Calendar.getInstance();
-            year = calendar.get(Calendar.YEAR);
-            month = calendar.get(Calendar.MONTH);
-            day = calendar.get(Calendar.DATE);
+    private void updateData() {
+        if (!checkOnline()) {
+            mSwipeRefreshLayout.setRefreshing(false);
+            return;
         }
-        new DatePickerDialog(this, new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker datePicker, int year, int month, int day) {
-                mSelectedStartDate = new LocalDate(year, month + 1, day);
-                button.setText(Utils.getDateText(mSelectedStartDate));
-            }
-        }
-        ,year, month - 1, day).show();
+        loadUsers();
+        loadReports();
     }
 
-    private void generateReport() {
-        final User owner = WorkLoggerApplication.getCurrentUser();
-        if (owner == null) {
-            Log.d(LOG_TAG, "User is null. Cannot use is to create report.");
-            Toast.makeText(this, "Cannot generate report. User data cannot be retrieved. Please try again.", Toast.LENGTH_SHORT).show();
-        }
-        final Report report = new Report();
-        report.setOwner(owner);
-        report.setStartDate(mSelectedStartDate.toDate().getTime());
-
-        final AppCompatSpinner usersSpinner = findViewById(R.id.users);
-        final AppCompatSpinner typeSpinner = findViewById(R.id.type);
-
-        final User selectedUser = ((UserSpinnerItem) usersSpinner.getSelectedItem()).getUser();
-        if (selectedUser == null) {
-            report.setGoogleId(Report.ALL);
-        } else {
-            report.setGoogleId(selectedUser.getGoogleId());
-        }
-        final ReportType type = (ReportType) typeSpinner.getSelectedItem();
-        report.setReportType(type.toString());
-        mGeneratedReport = report;
-        mCurrentReportSaved = false;
-        Log.d(LOG_TAG, "Report generated successfully.");
-        Toast.makeText(this, "Report generated. Please save it.", Toast.LENGTH_SHORT).show();
-    }
-
-    private void sendReport() {
+    private void addReport(final Report report) {
         if (!checkOnline()) {
             return;
         }
-        if (mGeneratedReport == null) {
-            Toast.makeText(this, "Generate a report before saving.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (mCurrentReportSaved) {
-            Toast.makeText(this, "Report is already saved.", Toast.LENGTH_SHORT).show();
-            return;
-        }
         final WorkLoggerService service = new RetrofitClient().createService();
-        final Call<Report> call = service.addReport(mGeneratedReport);
+        final Call<Report> call = service.addReport(report);
         call.enqueue(new Callback<Report>() {
             @Override
             public void onResponse(@NonNull Call<Report> call, @NonNull Response<Report> response) {
                 if (response.isSuccessful()) {
                     Log.d(LOG_TAG, "addReport was successful");
                     Toast.makeText(ReportActivity.this, "Report successfully saved.", Toast.LENGTH_SHORT).show();
-                    mGeneratedReport = response.body();
-                    mCurrentReportSaved = true;
-                    getWorkedHoursForReport();
+                    final Report report = response.body();
+                    if (report == null) {
+                        Log.d(LOG_TAG, "returned report was null. Not adding to list.");
+                        return;
+                    }
+                    final String subjectGoogleId = report.getGoogleId();
+                    final User subjectUser = mRetrievedUsersMap.get(subjectGoogleId);
+                    final CalculatedReport calculatedReport = new CalculatedReport(report, subjectUser);
+                    mAdapter.add(calculatedReport);
+                    getWorkedHoursForCalculatedReport(calculatedReport);
                 } else {
                     Log.d(LOG_TAG, "addReport was unsuccessful: " + response.message());
                     Toast.makeText(ReportActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
@@ -247,16 +202,40 @@ public class ReportActivity extends AppCompatActivity
         });
     }
 
-    private void getWorkedHoursForReport() {
+    private void updateReport(final CalculatedReport calculatedReport) {
         if (!checkOnline()) {
             return;
         }
-        if (!mCurrentReportSaved) {
-            Toast.makeText(this, "Save report before getting worked hours.", Toast.LENGTH_SHORT).show();
+        final WorkLoggerService service = new RetrofitClient().createService();
+        final Call<String> call = service.updateReport(calculatedReport.getReport());
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                if (response.isSuccessful()) {
+                    Log.d(LOG_TAG, "updateReport was successful");
+                    calculatedReport.invalidate();
+                    mAdapter.update(calculatedReport);
+                    getWorkedHoursForCalculatedReport(calculatedReport);
+                } else {
+                    Log.d(LOG_TAG, "updateReport was unsuccessful: " + response.message());
+                    Toast.makeText(ReportActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                Log.d(LOG_TAG, "updateReport failed: " + t.getMessage());
+                Toast.makeText(ReportActivity.this, "Cannot send to server. Please try again.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void getWorkedHoursForCalculatedReport(final CalculatedReport calculatedReport) {
+        if (!checkOnline()) {
             return;
         }
         final WorkLoggerService service = new RetrofitClient().createService();
-        final Call<Long> call = service.getWorkedHoursForReport(mGeneratedReport.getId());
+        final Call<Long> call = service.getWorkedHoursForReport(calculatedReport.getId());
         call.enqueue(new Callback<Long>() {
             @Override
             public void onResponse(@NonNull Call<Long> call, @NonNull Response<Long> response) {
@@ -266,12 +245,17 @@ public class ReportActivity extends AppCompatActivity
                     if (responseValue == null) {
                         Log.d(LOG_TAG, "returned worked hours is null.");
                     } else {
-                        mWorkedHours = responseValue;
-                        updateUI();
+                        final long workedHours = responseValue;
+                        calculatedReport.setWorkedHours(workedHours);
+                        mAdapter.update(calculatedReport);
                     }
                 } else {
                     Log.d(LOG_TAG, "getWorkedHoursForReport was unsuccessful: " + response.message());
                     Toast.makeText(ReportActivity.this, "Cannot get from server. Please try again.", Toast.LENGTH_SHORT).show();
+                }
+                mRemainingUnrefreshedReports -=1;
+                if (mRemainingUnrefreshedReports == 0) {
+                    mSwipeRefreshLayout.setRefreshing(false);
                 }
             }
 
@@ -279,11 +263,15 @@ public class ReportActivity extends AppCompatActivity
             public void onFailure(@NonNull Call<Long> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, "getWorkedHoursForReport failed: " + t.getMessage());
                 Toast.makeText(ReportActivity.this, "Cannot get from server. Please try again.", Toast.LENGTH_SHORT).show();
+                mRemainingUnrefreshedReports -=1;
+                if (mRemainingUnrefreshedReports == 0) {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
             }
         });
     }
 
-    private void getAllUsers() {
+    private void loadUsers() {
         if (!checkOnline()) {
             return;
         }
@@ -298,16 +286,11 @@ public class ReportActivity extends AppCompatActivity
                     if (users == null) {
                         Log.d(LOG_TAG, "returned users is null.");
                     } else {
-                        mRetrievedUsers.clear();
-                        final UserSpinnerItem allUserItem = new UserSpinnerItem(null);
-                        mRetrievedUsers.add(allUserItem);
-                        for (User user : users) {
-                            mRetrievedUsers.add(new UserSpinnerItem(user));
+                        mRetrievedUsers = users;
+                        mRetrievedUsersMap.clear();
+                        for (final User user: mRetrievedUsers) {
+                            mRetrievedUsersMap.put(user.getGoogleId(), user);
                         }
-                        final AppCompatSpinner usersSpinner = findViewById(R.id.users);
-                        final ArrayAdapter<UserSpinnerItem> usersAdapter =
-                                new ArrayAdapter<>(ReportActivity.this, R.layout.spinner_item, mRetrievedUsers);
-                        usersSpinner.setAdapter(usersAdapter);
                     }
                 } else {
                     Log.d(LOG_TAG, "getUsers was unsuccessful: " + response.message());
@@ -323,6 +306,111 @@ public class ReportActivity extends AppCompatActivity
         });
     }
 
+    private void loadReports() {
+        if (!checkOnline()) {
+            return;
+        }
+        final WorkLoggerService service = new RetrofitClient().createService();
+        final Call<List<Report>> call = service.getReportsByUser();
+        call.enqueue(new Callback<List<Report>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<Report>> call, @NonNull Response<List<Report>> response) {
+                if (response.isSuccessful()) {
+                    Log.d(LOG_TAG, "getReportsByUser was successful");
+                    final List<Report> reports = response.body();
+                    if (reports == null) {
+                        Log.d(LOG_TAG, "returned reports is null.");
+                        mSwipeRefreshLayout.setRefreshing(false);
+                    } else {
+                        mAdapter.clear();
+                        mRemainingUnrefreshedReports = reports.size();
+                        if (mRemainingUnrefreshedReports == 0) {
+                            mSwipeRefreshLayout.setRefreshing(false);
+                        }
+                        for (final Report report: reports) {
+                            final String subjectGoogleId = report.getGoogleId();
+                            final User subjectUser = mRetrievedUsersMap.get(subjectGoogleId);
+                            final CalculatedReport calculatedReport = new CalculatedReport(report, subjectUser);
+                            mAdapter.add(calculatedReport);
+                            getWorkedHoursForCalculatedReport(calculatedReport);
+                        }
+                    }
+                } else {
+                    Log.d(LOG_TAG, "getReportsByUser was unsuccessful: " + response.message());
+                    Toast.makeText(ReportActivity.this, "Cannot get from server. Please try again.", Toast.LENGTH_SHORT).show();
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<Report>> call, @NonNull Throwable t) {
+                Log.d(LOG_TAG, "getUsers failed: " + t.getMessage());
+                Toast.makeText(ReportActivity.this, "Cannot get from server. Please try again.", Toast.LENGTH_SHORT).show();
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
+    }
+
+    private void askForDelete(final int positionToDelete) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Are you sure to delete?");
+
+        final String positiveText = getString(android.R.string.ok);
+        builder.setPositiveButton(positiveText, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mAdapter.setNotNeedToNotify();
+                completeDeletion(positionToDelete);
+                dialog.dismiss();
+            }
+        });
+
+        final String negativeText = getString(android.R.string.cancel);
+        builder.setNegativeButton(negativeText, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(final DialogInterface dialogInterface) {
+                mAdapter.notifyItemChangedIfNeeded(positionToDelete);
+            }
+        });
+        builder.show();
+    }
+
+    private void completeDeletion(final int positionToDelete) {
+        if (!checkOnline()) {
+            mAdapter.notifyItemChanged(positionToDelete);
+            return;
+        }
+
+        final WorkLoggerService service = new RetrofitClient().createService();
+        final Call<String> call = service.removeReport(mAdapter.getItemId(positionToDelete));
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                if (response.isSuccessful()) {
+                    Log.d(LOG_TAG, "removeReport was successful");
+                    mAdapter.remove(positionToDelete);
+                } else {
+                    mAdapter.notifyItemChanged(positionToDelete);
+                    Log.d(LOG_TAG, "removeReport was unsuccessful: " + response.message());
+                    Toast.makeText(ReportActivity.this, "Cannot delete on server. Please try again.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                mAdapter.notifyItemChanged(positionToDelete);
+                Log.d(LOG_TAG, "removeReport failed: " + t.getMessage());
+                Toast.makeText(ReportActivity.this, "Cannot delete on server. Please try again.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     private boolean checkOnline() {
         final boolean online = WorkLoggerApplication.appIsOnline();
         if (online) {
@@ -330,28 +418,6 @@ public class ReportActivity extends AppCompatActivity
         }
         Toast.makeText(this, "You're offline. Please go online to complete operation.", Toast.LENGTH_SHORT).show();
         return false;
-    }
-
-    private void updateUI() {
-        final TextView subject = findViewById(R.id.subject);
-        final TextView startDate = findViewById(R.id.startdate);
-        final TextView interval = findViewById(R.id.interval);
-        final TextView workedTime = findViewById(R.id.worked_time);
-
-        String name = "Everybody";
-        for (UserSpinnerItem item: mRetrievedUsers) {
-            User itemUser = item.getUser();
-            if (itemUser != null && itemUser.getGoogleId().equals(mGeneratedReport.getGoogleId())) {
-                name = itemUser.getName();
-            }
-        }
-        subject.setText(name);
-        final LocalDate dateTime = new LocalDate(mGeneratedReport.getStartDate());
-        startDate.setText(Utils.getDateText(dateTime));
-        final ReportType type = ReportType.valueOf(mGeneratedReport.getReportType());
-        final String shownInterval = type.getShownName();
-        interval.setText(shownInterval);
-        workedTime.setText(Utils.getShowedElapsedTime(mWorkedHours));
     }
 
     @Override
@@ -416,4 +482,24 @@ public class ReportActivity extends AppCompatActivity
         return true;
     }
 
+    @Override
+    public void onReportAdded(Report report) {
+        final User owner = WorkLoggerApplication.getCurrentUser();
+        if (owner == null) {
+            Log.d(LOG_TAG, "User is null. Cannot add report.");
+            Toast.makeText(this, "Cannot add report. User data cannot be retrieved. Please try again.", Toast.LENGTH_SHORT).show();
+        }
+        report.setOwner(owner);
+        addReport(report);
+    }
+
+    @Override
+    public void onReportEdited(CalculatedReport editedReport) {
+        updateReport(editedReport);
+    }
+
+    @Override
+    public void deleteItem(int positionToDelete) {
+        askForDelete(positionToDelete);
+    }
 }

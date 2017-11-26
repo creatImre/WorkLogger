@@ -36,6 +36,12 @@ public interface WorkLoggerService {
     @POST("report/")
     Call<Report> addReport(@Body Report report);
 
+    @PUT("report/")
+    Call<String> updateReport(@Body Report report);
+
+    @DELETE("report/{id}")
+    Call<String> removeReport(@Path("id") long id);
+
     @GET("report/all")
     Call<List<Report>> getReportsByUser();
 
