@@ -36,7 +36,7 @@
     <string name="example_full_url">http://192.168.1.15:8080/service/rest/</string>
     <string name="title_activity_report">Reports</string>
     <string name="save">Save</string>
-    <string name="discard">Discard</string>
+    <string name="test_connection">Test connection</string>
     <string name="service_path">Service path:</string>
     <string name="port">Port:</string>
     <string name="ip_address">IP address:</string>
@@ -52,7 +52,9 @@
     <string name="level">Level:</string>
     <string name="name">Name:</string>
     <string name="dummy_interval">Month</string>
-    <string name="dummy_worked_time">20 hours 30 minutes</string>
+    <string name="dummy_worked_time">160 hours 30 minutes</string>
     <string name="dummy_start_date">2017.11.15</string>
-    <string name="dummy_subject">Imre Torma</string>
+    <string name="dummy_subject">Imre Torma:</string>
+    <string name="dummy_owner">By: Imre Torma</string>
+    <string name="discard">Discard</string>
 </resources>

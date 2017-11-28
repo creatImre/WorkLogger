@@ -24,8 +24,13 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 public class RetrofitClient {
 
     private Retrofit retrofit;
+    private String address;
 
     public RetrofitClient() {
+        this(WorkLoggerApplication.getFullServiceUrl());
+    }
+
+    public RetrofitClient(final String address) {
         OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
         clientBuilder.addInterceptor(new Interceptor() {
             @Override
@@ -59,7 +64,7 @@ public class RetrofitClient {
         retrofit = new Retrofit.Builder()
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
-                .baseUrl(WorkLoggerApplication.getFullServiceUrl())
+                .baseUrl(address)
                 .client(client)
                 .build();
     }

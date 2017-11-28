@@ -1,6 +1,9 @@
 package com.hw.szoftarch.worklogger.admin;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -30,11 +33,18 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.hw.szoftarch.worklogger.R;
 import com.hw.szoftarch.worklogger.WorkLoggerApplication;
+import com.hw.szoftarch.worklogger.entities.User;
+import com.hw.szoftarch.worklogger.networking.RetrofitClient;
+import com.hw.szoftarch.worklogger.networking.WorkLoggerService;
 import com.hw.szoftarch.worklogger.report.ReportActivity;
 import com.hw.szoftarch.worklogger.stopper.StopperActivity;
 import com.hw.szoftarch.worklogger.workinghour.WorkingHourActivity;
 
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ConfigActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -48,6 +58,8 @@ public class ConfigActivity extends AppCompatActivity
     private String mIpAddress;
     private String mPort;
     private String mService;
+
+    private ProgressDialog mProgressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -194,8 +206,15 @@ public class ConfigActivity extends AppCompatActivity
         discardButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View view) {
-                Toast.makeText(ConfigActivity.this, "Changes discarded.", Toast.LENGTH_SHORT).show();
                 updateUI();
+            }
+        });
+        final Button testButton = findViewById(R.id.btn_test);
+        testButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View view) {
+                showProgressDialog();
+                testConnection();
             }
         });
         final Button saveButton = findViewById(R.id.btn_save);
@@ -228,6 +247,71 @@ public class ConfigActivity extends AppCompatActivity
 
             }
         });
+    }
+
+    private void testConnection() {
+        final String fullAddress = mSecurity + "://" + mIpAddress + ":" + mPort + "/" + mService + "/";
+        final WorkLoggerService service = new RetrofitClient(fullAddress).createService();
+        final Call<User> call = service.login();
+        call.enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(@NonNull Call<User> call, @NonNull Response<User> response) {
+                if (response.isSuccessful()) {
+                    Log.d(LOG_TAG, "connecting to service was successful: " + response.message());
+                    setTestResult(true);
+                } else {
+                    Log.d(LOG_TAG, "connecting to service was not successful, but got response: " + response.message());
+                    setTestResult(false);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
+                Log.d(LOG_TAG, "connection to service failed: " + t.getMessage());
+                setTestResult(false);
+            }
+        });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mProgressDialog != null) {
+            mProgressDialog.dismiss();
+        }
+    }
+
+    private void showProgressDialog() {
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage(getString(R.string.loading));
+            mProgressDialog.setIndeterminate(true);
+        }
+
+        mProgressDialog.show();
+    }
+
+    private void hideProgressDialog() {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.hide();
+        }
+    }
+
+    private void setTestResult(final boolean success) {
+        final TextView fullUrl = findViewById(R.id.full_url);
+        final ColorStateList oldColors =  fullUrl.getTextColors();
+        if (success) {
+            fullUrl.setTextColor(Color.GREEN);
+        } else {
+            fullUrl.setTextColor(Color.RED);
+        }
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                fullUrl.setTextColor(oldColors);
+            }
+        }, 1000);
+        hideProgressDialog();
     }
 
     @Override
