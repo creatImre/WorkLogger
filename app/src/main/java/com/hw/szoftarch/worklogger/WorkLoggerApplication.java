@@ -11,7 +11,6 @@ import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
@@ -38,13 +37,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 
 public class WorkLoggerApplication extends Application {
 
     private static final String TAG = "WorkLoggerApplication";
     private static final String PROFILE_PICTURE_NAME = "profilePicture";
+    private static final String PREF_NAME = "configurationPreferences";
 
     public static String SECURITY_KEY = "security";
     public static String PORT_KEY = "port";
@@ -64,7 +64,7 @@ public class WorkLoggerApplication extends Application {
     public void onCreate() {
         super.onCreate();
         mInstance = this;
-        mPreferences = PreferenceManager.getDefaultSharedPreferences(mInstance.getApplicationContext());
+        mPreferences = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
     }
 
     public static Context getContext() {

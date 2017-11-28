@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -58,6 +57,8 @@ public class StopperActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
 
     private static final String LOG_TAG = WorkingHourActivity.class.getName();
+    private static final String PREF_NAME = "stopperPreferences";
+
     private SharedPreferences mPreferences;
     private boolean doubleBackToExitPressedOnce = false;
 
@@ -90,7 +91,7 @@ public class StopperActivity extends AppCompatActivity
         final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mPreferences = PreferenceManager.getDefaultSharedPreferences(StopperActivity.this);
+        mPreferences = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
 
         fab = findViewById(R.id.fab);
         fabStart = findViewById(R.id.fab_start);
