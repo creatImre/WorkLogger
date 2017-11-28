@@ -16,13 +16,13 @@
     android:orientation="horizontal">
 
     <TextView
-        android:id="@+id/subject"
+        android:id="@+id/owner"
         android:layout_width="150dp"
         android:textSize="16sp"
         android:layout_height="wrap_content"
         android:focusable="false"
         android:gravity="center_horizontal"
-        android:text="@string/dummy_subject"/>
+        android:text="@string/dummy_owner"/>
 
     <TextView
         android:id="@+id/start_date"
@@ -45,13 +45,25 @@
         android:text="@string/dummy_interval"/>
 
     <TextView
+        android:id="@+id/subject"
+        android:layout_below="@id/owner"
+        android:layout_marginTop="10dp"
+        android:layout_width="150dp"
+        android:textSize="16sp"
+        android:layout_height="wrap_content"
+        android:focusable="false"
+        android:gravity="center_horizontal"
+        android:text="@string/dummy_subject"/>
+
+    <TextView
         android:id="@+id/worked_time"
-        android:layout_below="@id/subject"
+        android:layout_below="@id/owner"
+        android:layout_toEndOf="@id/subject"
         android:textSize="16sp"
         android:layout_marginTop="10dp"
         android:textStyle="bold"
         android:textColor="@color/colorPrimary"
-        android:layout_width="match_parent"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:focusable="false"
         android:gravity="center_horizontal"

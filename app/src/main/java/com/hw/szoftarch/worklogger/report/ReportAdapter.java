@@ -45,13 +45,14 @@ class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ItemViewHolder>
     }
 
     class ItemViewHolder extends RecyclerView.ViewHolder {
-        TextView subject, startDate, interval, workedTime;
+        TextView owner, startDate, interval, subject, workedTime;
 
         ItemViewHolder(View view) {
             super(view);
-            subject = view.findViewById(R.id.subject);
+            owner = view.findViewById(R.id.owner);
             startDate = view.findViewById(R.id.start_date);
             interval = view.findViewById(R.id.interval);
+            subject = view.findViewById(R.id.subject);
             workedTime = view.findViewById(R.id.worked_time);
         }
     }
@@ -66,9 +67,10 @@ class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ItemViewHolder>
     public void onBindViewHolder(final ItemViewHolder holder, int position) {
         final CalculatedReport report = mCalculatedReports.get(position);
 
-        holder.subject.setText(report.getSubjectName());
+        holder.owner.setText(report.getOwnerName());
         holder.startDate.setText(report.getStartDateText());
         holder.interval.setText(report.getIntervalText());
+        holder.subject.setText(report.getSubjectName());
         holder.workedTime.setText(report.getWorkedHoursText());
     }
 
@@ -103,11 +105,6 @@ class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ItemViewHolder>
                 notifyItemChanged(i);
             }
         }
-    }
-
-    void setCalculatedReport(final List<CalculatedReport> calculatedReports) {
-        mCalculatedReports = calculatedReports;
-        notifyDataSetChanged();
     }
 
     @Override

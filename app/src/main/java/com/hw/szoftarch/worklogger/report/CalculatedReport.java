@@ -11,7 +11,7 @@ import com.hw.szoftarch.worklogger.entities.User;
 import org.joda.time.LocalDate;
 
 public class CalculatedReport {
-    private static final String EVERYONE = "Everyone";
+    private static final String EVERYONE = "Everyone:";
     @NonNull
     private Report report;
     private User subjectUser = null;
@@ -32,11 +32,19 @@ public class CalculatedReport {
         calculated = true;
     }
 
+    String getOwnerName() {
+        User owner = report.getOwner();
+        if (owner == null) {
+            return "By: No owner";
+        }
+        return "By: " + owner.getName();
+    }
+
     String getSubjectName() {
         if (subjectUser == null) {
             return EVERYONE;
         }
-        return subjectUser.getName();
+        return subjectUser.getName() + ":";
     }
 
     String getStartDateText() {
